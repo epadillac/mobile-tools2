@@ -630,8 +630,8 @@ export default class extends Controller {
       const emoji = circleEmojis[person.colorIndex % circleEmojis.length]
 
       mono += `${emoji} ${person.name}\n`
-      mono += `   Consumo:       ${formatMoney(subtotal)}\n`
       if (tipPercent > 0) {
+        mono += `   Consumo:       ${formatMoney(subtotal)}\n`
         mono += `   Propina:       ${formatMoney(tip)}\n`
       }
       mono += `   Total:         ${formatMoney(total)}\n`
