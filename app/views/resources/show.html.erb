@@ -1,0 +1,16 @@
+<% content_for :title, "Form Submitted" %>
+
+<div class="top-level-container">
+  <h1 class="hide@native margin-bs-xl text-large-title">Form Submitted</h1>
+  <p>This page was redirected to after submitting the form. You entered the following:</p>
+  <dl class="unstyled-list">
+    <div>
+      <dt class="color-on-body-muted">First name:</dt>
+      <dd><%= @first_name %></dd>
+    </div>
+    <div>
+      <dt class="color-on-body-muted">Last name:</dt>
+      <dd><%= @last_name %></dd>
+    </div>
+  </dl>
+</div>

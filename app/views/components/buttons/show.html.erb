@@ -1,0 +1,27 @@
+<% content_for :title, "Button Component" %>
+
+<div class="container mt-3">
+  <h1 class="d-hotwire-native-none">Button Component</h1>
+  <p>Adds a native button to the navigation bar on iOS and action bar on Android. The button can contain either a text string or an image.</p>
+  <p><%= link_to "View documentation", "https://github.com/joemasilotti/bridge-components/tree/main/components/button", class: "btn btn-outline-primary btn-sm" %></p>
+</div>
+
+<div class="list-group list-group-flush container-sm px-0">
+  <%= render "shared/item",
+    path: text_components_button_path,
+    icon: "bi-fonts",
+    name: "Text button",
+    description: "Render text inside the button." %>
+
+  <%= render "shared/item",
+    path: image_components_button_path,
+    icon: "bi-image",
+    name: "Image button",
+    description: "Render an image inside the button." %>
+
+  <%= render "shared/item",
+    path: left_components_button_path,
+    icon: "bi-arrow-left",
+    name: "Left button",
+    description: "Render a button on the left side." %>
+</div>

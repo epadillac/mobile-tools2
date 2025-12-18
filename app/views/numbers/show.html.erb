@@ -1,0 +1,8 @@
+<% content_for :title, "##{@number}" %>
+
+<div class="top-level-container">
+  <h1 class="hide@native margin-bs-xl text-large-title"><%= "##{@number}" %></h1>
+  <p>You just navigated from <code>/numbers</code>, a URL presented with a native screen, to <code>/numbers/:id</code>, a URL presented with a web screen. The path configuration was used to determine the corresponding destination screens.</p>
+  <p>On iOS, we used a <code>NavigationHandler</code> to route the <code>/numbers/:id</code> URL through the tab's <code>Navigator</code>. Check out <code>NumbersViewController</code> for an example.</p>
+  <p>On Android, we routed the <code>/numbers/:id</code> URL through the tab's <code>Navigator</code>. Check out <code>NumbersFragment</code> for an example.</p>
+</div>

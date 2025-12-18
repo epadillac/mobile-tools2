@@ -1,0 +1,58 @@
+<% content_for :title, "Basic Navigation" %>
+
+<div class="top-level-container">
+  <h1 class="hide@native margin-bs-xl text-large-title">Basic Navigation</h1>
+  <p>
+    This screen was pushed onto the navigation stack.<br>
+    This is the default behavior, no custom options are required.
+  </p>
+
+  <div class="formatted-list formatted-list--top-level">
+    <%= render "navigations/item",
+      path: second_navigation_path,
+      icon: "arrow-right-bold",
+      name: "Basic navigation",
+      description: "Push another screen on the stack." %>
+
+    <%= render "navigations/item",
+      path: new_modal_path,
+      icon: "arrow-up-bold",
+      name: "Modal navigation",
+      description: "Present a modal screen." %>
+
+    <%= render "navigations/item",
+      path: replace_navigation_path,
+      data: {turbo_action: :replace},
+      icon: "arrow-left-right-bold",
+      name: "Replace navigation",
+      description: "Replace this screen with a new one." %>
+
+    <%= render "navigations/item",
+      path: navigation_path,
+      icon: "arrow-clockwise-bold",
+      name: "Visit same page",
+      description: "Reload this screen." %>
+  </div>
+
+  <h3 class="margin-bs-xl margin-be-l text-title">Historical Navigation</h3>
+
+  <div class="formatted-list formatted-list--top-level">
+    <%= render "navigations/item",
+      path: turbo_recede_historical_location_path,
+      icon: "arrow-left-bold",
+      name: "Recede navigation",
+      description: "Pop this screen off the stack." %>
+
+    <%= render "navigations/item",
+      path: turbo_refresh_historical_location_path,
+      icon: "arrow-clockwise-bold",
+      name: "Refresh navigation",
+      description: "Refresh this screen." %>
+
+    <%= render "navigations/item",
+      path: turbo_resume_historical_location_path,
+      icon: "stop-bold",
+      name: "Resume navigation",
+      description: "Do nothing." %>
+  </div>
+</div>

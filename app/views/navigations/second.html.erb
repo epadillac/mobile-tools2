@@ -1,0 +1,20 @@
+<% content_for :title, "Basic Navigation #2" %>
+
+<div class="top-level-container">
+  <h1 class="hide@native margin-bs-xl text-large-title">Basic Navigation #2</h1>
+  <p>Another screen pushed onto the navigation stack.</p>
+
+  <div class="formatted-list formatted-list--top-level">
+    <%= render "navigations/item",
+      path: navigation_path,
+      icon: "arrow-left-bold",
+      name: "Visit previous page",
+      description: "Pop this screen and reload previous one." %>
+
+    <%= render "navigations/item",
+      path: root_path,
+      icon: "arrow-to-start-bold",
+      name: "Clear all",
+      description: "Pop all screens off the stack." %>
+  </div>
+</div>

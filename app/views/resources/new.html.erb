@@ -1,0 +1,34 @@
+<% content_for :title, "Forms and Flash Messages" %>
+
+<article class="top-level-container">
+  <h1 class="hide@native margin-bs-xl text-large-title">Forms and Flash Messages</h1>
+  <p>This page includes a form that demonstrates passing data to the server, redirecting to a new page, and rendering error and success flash messages.</p>
+  <p>Check out the <code>form</code> bridge component to convert the web-based submit button to a native one.</p>
+
+  <% if @resource.errors.any? %>
+    <section class="alert alert--warning margin-be-l" role="alert">
+      <h2 class="alert__header text-headline">Please fix these issues:</h2>
+      <ul class="unstyled-list">
+        <% @resource.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </section>
+  <% end %>
+
+  <%= form_with model: @resource, class: "flex-container row-gap-gutter" do |form| %>
+    <div class="flex-column flex-100 flex-6@l flex-5@xl">
+      <%= form.label :first_name, class: "form-label" %>
+      <%= form.text_field :first_name, class: "form-control inline-100" %>
+    </div>
+
+    <div class="flex-column flex-100 flex-6@l flex-5@xl">
+      <%= form.label :last_name, class: "form-label" %>
+      <%= form.text_field :last_name, class: "form-control inline-100" %>
+    </div>
+
+    <div class="flex-column align-self-end">
+      <%= form.submit "Submit form", data: { bridge__form_target: "submit", bridge_title: "Submit" }, class: "button inline-100" %>
+    </div>
+  <% end %>
+</article>

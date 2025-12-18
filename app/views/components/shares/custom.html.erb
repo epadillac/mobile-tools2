@@ -1,0 +1,15 @@
+<% content_for :title, "Share Custom URL" %>
+
+<div class="container mt-3">
+  <h1 class="d-hotwire-native-none">Share Custom URL</h1>
+  <p>Adds a button that presents a native share sheet, sharing <code>data-bridge-url</code>.</p>
+</div>
+
+<!--<meta data-controller="bridge--share" data-bridge-url="https://bridgecomponents.dev">-->
+
+<meta data-controller="bridge--share"
+        data-bridge-url="https://example.com"
+        data-bridge-title="Check this out!"
+        data-bridge-text="I found this interesting article"
+        data-bridge-subject="Shared from app"
+        data-action="click->bridge--share#open">

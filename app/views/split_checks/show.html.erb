@@ -1,0 +1,233 @@
+<% content_for(:title) { "Dividir Cuenta - Articulos" } %>
+
+<% content_for :head do %>
+<!--  <meta name="turbo-visit-control" content="reload">-->
+<% end %>
+
+<div data-controller="split-check">
+  <!-- Modal para editar nombre -->
+  <div data-split-check-target="nameModal"
+       data-action="click->split-check#closeModalOnOutsideClick"
+       class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-6 mx-4 w-full max-w-sm">
+      <h3 class="text-lg font-bold text-gray-800 mb-4">Editar nombre</h3>
+      <input type="text"
+             data-split-check-target="nameInput"
+             data-action="keydown->split-check#handleNameKeydown"
+             class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-lg"
+             placeholder="Nombre de la persona"
+             maxlength="20">
+      <div class="flex gap-3 mt-4">
+        <button type="button"
+                data-action="click->split-check#closeNameModal"
+                class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+          Cancelar
+        </button>
+        <button type="button"
+                data-action="click->split-check#saveName"
+                class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors">
+          Guardar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="min-h-screen bg-gray-100 py-8">
+    <div class="max-w-4xl mx-auto px-4">
+      <!-- Comparacion de Totales (solo mostrar si hay diferencia) -->
+      <% subtotal = @items.sum { |item| item[:price] } %>
+      <% if @receipt_total && @receipt_total > 0 %>
+        <% difference = (@receipt_total - subtotal).abs %>
+        <% unless difference < 1.0 %>
+          <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold text-gray-800">Verificacion de Totales</h2>
+              <span class="px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-700">
+                Diferencia: $<%= sprintf('%.2f', difference) %>
+              </span>
+            </div>
+            <div class="mt-4 grid grid-cols-2 gap-4">
+              <div class="bg-gray-50 rounded-lg p-4">
+                <p class="text-sm text-gray-500 mb-1">Total del Ticket (imagen)</p>
+                <p class="text-2xl font-bold text-gray-800">$<%= sprintf('%.2f', @receipt_total) %></p>
+              </div>
+              <div class="bg-indigo-50 rounded-lg p-4">
+                <p class="text-sm text-indigo-600 mb-1">Total de Articulos (procesados de la imagen)</p>
+                <p class="text-2xl font-bold text-indigo-600">$<%= sprintf('%.2f', subtotal) %></p>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+
+      <!-- Personas y Propina (Combined) -->
+      <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+        <!-- Header with title and copy button -->
+        <div class="flex items-center justify-between mb-3">
+          <div>
+            <h2 class="text-base font-bold text-gray-800">Personas</h2>
+            <p class="text-gray-500 text-xs">Toca persona, luego articulo. Doble toca para editar.</p>
+          </div>
+          <button type="button"
+                  data-action="click->split-check#copySummary"
+                  class="copy-summary-btn flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors shrink-0">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+            </svg>
+            <span class="copy-btn-text">Copiar</span>
+            <% if hotwire_native_app? %>
+            <%= link_to "Button", new_split_check_url, class: "btn btn-primary", data: {
+              controller: "bridge--button",
+              bridge_side: "left",
+              bridge_ios_image: "chevron.backward",
+              bridge_android_image: "Image"
+            } %>
+            <% end %>
+          </button>
+        </div>
+
+        <!-- People buttons -->
+        <div data-split-check-target="peopleContainer" class="flex flex-wrap gap-2 mb-3">
+          <!-- People will be added here by JavaScript -->
+        </div>
+
+        <!-- Propina collapsible -->
+        <details class="pt-3 border-t border-gray-200 group">
+          <summary class="flex items-center gap-2 cursor-pointer list-none text-sm text-gray-600">
+            <span class="font-medium">Propina:</span>
+            <span class="text-gray-500" data-split-check-target="tipDisplay">10%</span>
+            <svg class="w-3 h-3 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <div class="flex items-center gap-2 mt-2">
+            <div class="flex flex-wrap gap-1">
+              <button type="button"
+                      data-split-check-target="tipPreset"
+                      data-action="click->split-check#setTipPreset"
+                      data-tip="0"
+                      class="tip-preset px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors border-2 border-transparent">0%</button>
+              <button type="button"
+                      data-split-check-target="tipPreset"
+                      data-action="click->split-check#setTipPreset"
+                      data-tip="5"
+                      class="tip-preset px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors border-2 border-transparent">5%</button>
+              <button type="button"
+                      data-split-check-target="tipPreset"
+                      data-action="click->split-check#setTipPreset"
+                      data-tip="10"
+                      class="tip-preset px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors border-2 border-transparent">10%</button>
+              <button type="button"
+                      data-split-check-target="tipPreset"
+                      data-action="click->split-check#setTipPreset"
+                      data-tip="15"
+                      class="tip-preset px-3 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors border-2 border-transparent">15%</button>
+            </div>
+            <input type="number"
+                   data-split-check-target="tipInput"
+                   data-action="input->split-check#handleTipChange"
+                   min="0"
+                   max="100"
+                   value="10"
+                   class="w-14 px-2 py-1 border border-gray-300 rounded-lg text-center text-sm font-medium focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+            <span class="text-sm text-gray-500">%</span>
+          </div>
+        </details>
+      </div>
+
+      <!-- Articulos del Ticket - Receipt Style -->
+      <div class="relative">
+        <!-- Receipt paper -->
+        <div class="bg-white shadow-lg overflow-hidden border border-gray-200" style="font-family: 'Courier New', Courier, monospace;">
+          <!-- Receipt Header -->
+          <div class="text-center py-4 border-b border-dashed border-gray-300">
+            <p class="text-xs text-gray-500 tracking-widest">*** <%= @restaurant_name.present? ? @restaurant_name : "TICKET" %> ***</p>
+          </div>
+
+          <!-- Items List -->
+          <div data-split-check-target="itemsContainer" class="px-4 py-2">
+            <% main_item_index = 0 %>
+            <% current_group = 0 %>
+            <% @items.each_with_index do |item, index| %>
+              <% is_modifier = item[:is_modifier] == true %>
+              <% unless is_modifier %>
+                <% main_item_index += 1 %>
+                <% current_group = main_item_index %>
+              <% end %>
+
+              <div class="cursor-pointer py-1 px-2 -mx-2 rounded transition-all border-l-4"
+                   style="border-left-color: transparent;"
+                   data-item-id="<%= index %>"
+                   data-is-modifier="<%= is_modifier %>"
+                   data-group="<%= current_group %>"
+                   data-price="<%= item[:quantity] * item[:price] %>"
+                   data-assigned-to=""
+                   data-action="click->split-check#handleRowClick">
+                <% if is_modifier %>
+                  <!-- Modifier item -->
+                  <div class="flex justify-between items-center text-gray-500 text-xs pl-3">
+                    <span class="truncate">+ <%= item[:name] %></span>
+                    <span class="ml-2 whitespace-nowrap">$<%= sprintf('%.2f', item[:price]) %></span>
+                  </div>
+                <% else %>
+                  <!-- Main item -->
+                  <div class="flex justify-between items-center text-gray-800 text-sm">
+                    <span class="truncate font-medium"><%= item[:quantity] > 1 ? "#{item[:quantity]}x " : "" %><%= item[:name] %></span>
+                    <span class="ml-2 whitespace-nowrap font-bold">$<%= sprintf('%.2f', item[:price]) %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+
+          <!-- Separator -->
+          <div class="px-4">
+            <div class="border-t border-dashed border-gray-300"></div>
+          </div>
+
+          <!-- Total -->
+          <div class="px-4 py-4">
+            <% subtotal = @items.sum { |item| item[:quantity] * item[:price] } %>
+            <div class="flex justify-between items-center text-gray-900 text-lg font-bold">
+              <span>TOTAL</span>
+              <span>$<%= sprintf('%.2f', subtotal) %></span>
+            </div>
+          </div>
+
+          <!-- Receipt Footer -->
+          <div class="text-center py-3 border-t border-dashed border-gray-300">
+            <p class="text-xs text-gray-400">Toca un articulo para asignarlo</p>
+          </div>
+        </div>
+
+        <!-- Torn edge effect -->
+        <div class="h-4 bg-white border-l border-r border-gray-200" style="mask-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 10%22><path d=%22M0,0 Q5,10 10,0 T20,0 T30,0 T40,0 T50,0 T60,0 T70,0 T80,0 T90,0 T100,0 V10 H0 Z%22 fill=%22white%22/></svg>'); -webkit-mask-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 10%22><path d=%22M0,0 Q5,10 10,0 T20,0 T30,0 T40,0 T50,0 T60,0 T70,0 T80,0 T90,0 T100,0 V10 H0 Z%22 fill=%22white%22/></svg>'); mask-size: 20px 100%; -webkit-mask-size: 20px 100%;"></div>
+      </div>
+
+      <!-- Resumen de Division (Collapsible) -->
+      <details class="bg-white rounded-xl shadow-lg mt-6 group">
+        <summary class="flex items-center justify-between p-4 cursor-pointer list-none">
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-bold text-gray-800">Resumen</h2>
+            <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </div>
+          <button type="button"
+                  data-action="click->split-check#copySummary"
+                  class="copy-summary-btn flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+            </svg>
+            <span class="copy-btn-text">Copiar</span>
+          </button>
+        </summary>
+        <div class="px-4 pb-4">
+          <div data-split-check-target="splitSummary" class="space-y-3">
+            <!-- Summary will be populated by JavaScript -->
+          </div>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>

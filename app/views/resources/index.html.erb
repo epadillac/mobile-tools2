@@ -1,0 +1,38 @@
+<% content_for :title, "Resources" %>
+
+<div class="top-level-container">
+  <h1 class="hide@native margin-bs-xl text-large-title">Resources</h1>
+  <p>This page includes links to Hotwire Native resources, answers to common questions, and a place to validate bug fixes.</p>
+
+  <div class="formatted-list formatted-list--top-level">
+    <%= render "navigations/item",
+      path: docs_url,
+      icon: "book-bold",
+      name: "Documentation",
+      description: "The official Hotwire Native docs." %>
+
+    <%= render "navigations/item",
+      path: book_url,
+      icon: "book-bold",
+      name: "Book",
+      description: "Hotwire Native for Rails Developers by Joe Masilotti." %>
+
+    <%= render "navigations/item",
+      path: long_resources_path,
+      icon: "scroll-bold",
+      name: "Scroll restoration",
+      description: "Keep your place when navigating back." %>
+
+    <%= render "navigations/item",
+      path: new_resource_path,
+      icon: "warning-bold",
+      name: "Forms and flash messages",
+      description: "A demo for forms and flash messages." %>
+
+    <%= render "navigations/item",
+      path: upload_resources_path,
+      icon: "cloud-upload-bold",
+      name: "Native file uploads",
+      description: "A demo for image and camera uploads." %>
+  </div>
+</div>

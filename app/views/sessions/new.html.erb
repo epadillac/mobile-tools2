@@ -1,0 +1,9 @@
+<% content_for :title, "Sign In" %>
+
+<div class="top-level-container">
+  <h1 class="hide@native margin-bs-xl text-large-title">Sign In</h1>
+  <p>The server returned a "401 Unauthorized"  response. The native code caught this and manually routed this sign in screen.</p>
+  <p>Click the Sign In button below to set a cookie and access the protected page.</p>
+
+  <%= button_to "Sign in", session_path, class: "button" %>
+</div>

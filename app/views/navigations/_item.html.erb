@@ -1,0 +1,8 @@
+<%= link_to path, data: local_assigns[:data] || {}, class: "formatted-list__item" do %>
+  <%= icon_tag icon %>
+  <div class="flex-fill">
+    <p class="no-margin text-headline"><%= name %></p>
+    <p class="no-margin color-on-body-muted"><%= description %></p>
+  </div>
+  <%= icon_tag "chevron-right-bold", size: :small, class: "color-subtle" %>
+<% end %>

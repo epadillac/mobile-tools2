@@ -1,0 +1,18 @@
+<header class="header top-level-container hide@native">
+  <%= link_to root_path, class: "header__brand unstyled-link color-accent" do %>
+    <%= sprite_tag "hotwire-native-logo", aria: { label: "Hotwire Native Demo" } %>
+  <% end %>
+  <nav>
+    <ul class="main-navigation unstyled-list block-100">
+      <li>
+        <%= link_to "Navigation", root_path, class: "main-navigation__link decorated-link" %>
+      </li>
+      <li>
+        <%= link_to " Bridge Components", components_path, class: "main-navigation__link decorated-link" %>
+      </li>
+      <li>
+        <%= link_to "Resources", resources_path, class: "main-navigation__link decorated-link" %>
+      </li>
+    </ul>
+  </nav>
+</header>

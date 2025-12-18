@@ -1,0 +1,49 @@
+/*
+ * Header
+ */
+
+.header {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: start;
+  background: var(--color-surface);
+  color: var(--color-on-surface);
+
+  @media (min-width: 35rem) {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: stretch;
+  }
+}
+
+.header__brand {
+  svg {
+    display: block;
+    inline-size: 10em;
+    block-size: 4em;
+  }
+}
+
+/*
+ * Main navigation
+ */
+
+.main-navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: stretch;
+  gap: 1em;
+  text-align: center;
+
+  @media (min-width: 45rem) {
+    gap: 2em;
+  }
+}
+
+.main-navigation__link {
+  display: flex;
+  block-size: 100%;
+  align-items: center;
+  padding-block: 1rem;
+}

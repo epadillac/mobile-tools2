@@ -1,0 +1,14 @@
+<% content_for :title, "Numbers" %>
+
+<div class="top-level-container">
+  <h1 class="hide@native margin-bs-xl text-large-title">Numbers</h1>
+  <p>This page will be intercepted with a native screen in the apps.</p>
+
+  <div class="formatted-list formatted-list--top-level">
+    <% (1..10).each do |i| %>
+      <div class="formatted-list__item padding-i-l">
+        <%= i %>
+      </div>
+    <% end %>
+  </div>
+</div>

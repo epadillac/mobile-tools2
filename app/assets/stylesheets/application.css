@@ -1,0 +1,4 @@
+/* Disable smooth scroll from Bootstrap. */
+html {
+  scroll-behavior: auto !important;
+}

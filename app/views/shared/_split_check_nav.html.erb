@@ -1,0 +1,15 @@
+<header class="header top-level-container hide@native" data-controller="split-check-nav">
+  <nav>
+    <ul class="main-navigation unstyled-list block-100">
+      <li>
+        <%= link_to "Subir Nuevo Ticket", new_split_check_path, class: "main-navigation__link decorated-link", data: { action: "click->split-check-nav#clearSplitData" } %>
+      </li>
+      <li>
+        <%= link_to "Components", components_path, class: "main-navigation__link decorated-link" %>
+      </li>
+      <li>
+        <%= link_to "Demo", demo_split_checks_path, class: "main-navigation__link decorated-link" %>
+      </li>
+    </ul>
+  </nav>
+</header>
