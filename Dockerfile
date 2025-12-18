@@ -68,7 +68,7 @@ COPY --from=build /rails /rails
 RUN groupadd --system --gid 1000 rails && \
     useradd rails --uid 1000 --gid 1000 --create-home --shell /bin/bash && \
     mkdir /data && \
-    chown -R 1000:1000 db log storage tmp /data
+    chown -R 1000:1000 db log storage tmp /rails /data
 USER 1000:1000
 
 # Deployment options
