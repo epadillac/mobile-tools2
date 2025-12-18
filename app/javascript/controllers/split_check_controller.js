@@ -605,42 +605,50 @@ export default class extends Controller {
       }
     })
 
-    // Build formatted text
-    let text = '\u{1F9FE} *Division de Cuenta*\n'
-    text += '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n\n'
+    // Circle emojis matching color palette
+    const circleEmojis = ['🔵', '🟢', '🟡', '🟣', '🔴', '🩵', '🩷', '🔷']
 
     let grandSubtotal = 0
     let grandTotal = 0
 
-    // Helper to pad amounts for alignment
-    const padAmount = (amount) => {
-      return amount.toFixed(2).padStart(8)
+    // Helper to format currency with padding
+    const formatMoney = (amount) => {
+      return '$' + amount.toFixed(2).padStart(7)
     }
 
-    this.people.forEach(person => {
+    // Build the monospace section
+    let mono = ''
+    mono += '------------------------------\n'
+
+    this.people.forEach((person) => {
       const subtotal = totals[person.id]
       const tip = subtotal * tipPercent
       const total = subtotal + tip
       grandSubtotal += subtotal
       grandTotal += total
 
-      const tipLabel = `Propina (${(tipPercent * 100).toFixed(0)}%)`
+      const emoji = circleEmojis[person.colorIndex % circleEmojis.length]
 
-      text += `\u{1F464} *${person.name}*\n`
-      text += `   Consumo:       $${padAmount(subtotal)}\n`
+      mono += `${emoji} ${person.name}\n`
+      mono += `   Consumo:       ${formatMoney(subtotal)}\n`
       if (tipPercent > 0) {
-        text += `   ${tipLabel.padEnd(13)}: $${padAmount(tip)}\n`
+        mono += `   Propina:       ${formatMoney(tip)}\n`
       }
-      text += `   *Total:        $${padAmount(total)}*\n\n`
+      mono += `   Total:         ${formatMoney(total)}\n`
+      mono += '------------------------------\n'
     })
 
-    text += '\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\u2501\n'
     if (tipPercent > 0) {
-      text += `\u{1F4B0} *Total:   $${padAmount(grandSubtotal)}*\n`
-      text += `\u{1F4B0} *Con ${(tipPercent * 100).toFixed(0)}% de propina: $${padAmount(grandTotal)}*`
-    } else {
-      text += `\u{1F4B0} *Total:   $${padAmount(grandTotal)}*`
+      mono += `   Subtotal:      ${formatMoney(grandSubtotal)}\n`
+      mono += `   Propina (${(tipPercent * 100).toFixed(0)}%): ${formatMoney(grandTotal - grandSubtotal)}\n`
     }
+    mono += `💰 TOTAL:         ${formatMoney(grandTotal)}\n`
+
+    // Build final text with header outside monospace and content inside
+    let text = '🧾 *División de Cuenta*'
+    text += '```\n'
+    text += mono
+    text += '```'
 
     return text
   }
