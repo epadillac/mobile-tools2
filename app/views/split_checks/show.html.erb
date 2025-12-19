@@ -32,6 +32,76 @@
     </div>
   </div>
 
+  <!-- Modal para dividir articulo -->
+  <div data-split-check-target="divideModal"
+       data-action="click->split-check#closeDivideModalOnOutsideClick"
+       class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-6 mx-4 w-full max-w-sm">
+      <h3 class="text-lg font-bold text-gray-800 mb-2">Dividir articulo</h3>
+      <p class="text-sm text-gray-500 mb-4" data-split-check-target="divideItemName">Articulo</p>
+      <p class="text-xl font-bold text-indigo-600 mb-4" data-split-check-target="divideItemPrice">$0.00</p>
+
+      <div class="space-y-3">
+        <!-- Dividir entre todas las personas -->
+        <button type="button"
+                data-action="click->split-check#divideEqually"
+                class="w-full flex items-center gap-3 px-4 py-3 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors text-left">
+          <div class="w-10 h-10 bg-indigo-500 rounded-full flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <p class="font-medium text-gray-800">Dividir entre todos</p>
+            <p class="text-xs text-gray-500">Asigna partes iguales a cada persona</p>
+          </div>
+        </button>
+
+        <!-- Dividir en 2 -->
+        <button type="button"
+                data-action="click->split-check#divideByTwo"
+                class="w-full flex items-center gap-3 px-4 py-3 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors text-left">
+          <div class="w-10 h-10 bg-emerald-500 rounded-full flex items-center justify-center">
+            <span class="text-white font-bold">½</span>
+          </div>
+          <div>
+            <p class="font-medium text-gray-800">Dividir en 2</p>
+            <p class="text-xs text-gray-500">Crea 2 filas para asignar individualmente</p>
+          </div>
+        </button>
+
+        <!-- Dividir en N partes -->
+        <div class="flex items-center gap-2">
+          <button type="button"
+                  data-action="click->split-check#divideByN"
+                  class="flex-1 flex items-center gap-3 px-4 py-3 bg-amber-50 hover:bg-amber-100 rounded-lg transition-colors text-left">
+            <div class="w-10 h-10 bg-amber-500 rounded-full flex items-center justify-center">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+              </svg>
+            </div>
+            <div>
+              <p class="font-medium text-gray-800">Dividir en partes</p>
+              <p class="text-xs text-gray-500">Crea filas individuales</p>
+            </div>
+          </button>
+          <input type="number"
+                 data-split-check-target="divideNInput"
+                 min="2"
+                 max="10"
+                 value="3"
+                 class="w-16 px-3 py-3 border border-gray-300 rounded-lg text-center font-bold text-lg focus:ring-2 focus:ring-amber-500 focus:border-amber-500">
+        </div>
+      </div>
+
+      <button type="button"
+              data-action="click->split-check#closeDivideModal"
+              class="w-full mt-4 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+        Cancelar
+      </button>
+    </div>
+  </div>
+
   <div class="min-h-screen bg-gray-100 py-8">
     <div class="max-w-4xl mx-auto px-4">
       <!-- Comparacion de Totales (solo mostrar si hay diferencia) -->
@@ -62,19 +132,31 @@
 
       <!-- Personas y Propina (Combined) -->
       <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
-        <!-- Header with title and copy button -->
+        <!-- Header with title and copy buttons -->
         <div class="flex items-center justify-between mb-3">
           <div>
             <h2 class="text-base font-bold text-gray-800">Personas</h2>
-            <p class="text-gray-500 text-xs">Toca persona, luego articulo. Doble toca para editar.</p>
+            <p class="text-gray-500 text-xs">Toca persona, luego selecciona cada artículo. Toca dos veces para editar nombre.</p>
           </div>
-          <button type="button"
-                  data-action="click->split-check#copySummary"
-                  class="copy-summary-btn flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors shrink-0">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
-            </svg>
-            <span class="copy-btn-text">Copiar</span>
+          <div class="flex items-center gap-2 shrink-0">
+            <button type="button"
+                    data-action="click->split-check#copyDetailedSummary"
+                    class="copy-detailed-btn flex items-center gap-1 px-2 py-1 bg-indigo-500 text-white rounded-lg text-xs font-medium hover:bg-indigo-600 transition-colors"
+                    title="Copiar con detalle de articulos">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <span class="copy-btn-text">Detalle</span>
+            </button>
+            <button type="button"
+                    data-action="click->split-check#copySummary"
+                    class="copy-summary-btn flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors"
+                    title="Copiar resumen">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+              </svg>
+              <span class="copy-btn-text">Resumen</span>
+            </button>
             <% if hotwire_native_app? %>
             <%= link_to "Button", new_split_check_url, class: "btn btn-primary", data: {
               controller: "bridge--button",
@@ -83,7 +165,7 @@
               bridge_android_image: "Image"
             } %>
             <% end %>
-          </button>
+          </div>
         </div>
 
         <!-- People buttons -->
@@ -173,7 +255,17 @@
                   <!-- Main item -->
                   <div class="flex justify-between items-center text-gray-800 text-sm">
                     <span class="truncate font-medium"><%= item[:quantity] > 1 ? "#{item[:quantity]}x " : "" %><%= item[:name] %></span>
-                    <span class="ml-2 whitespace-nowrap font-bold">$<%= sprintf('%.2f', item[:price]) %></span>
+                    <div class="flex items-center gap-2 ml-2">
+                      <button type="button"
+                              data-action="click->split-check#handleDivideClick"
+                              class="divide-btn p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                              title="Dividir articulo">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+                        </svg>
+                      </button>
+                      <span class="whitespace-nowrap font-bold">$<%= sprintf('%.2f', item[:price]) %></span>
+                    </div>
                   </div>
                 <% end %>
               </div>
@@ -213,14 +305,26 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
             </svg>
           </div>
-          <button type="button"
-                  data-action="click->split-check#copySummary"
-                  class="copy-summary-btn flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
-            </svg>
-            <span class="copy-btn-text">Copiar</span>
-          </button>
+          <div class="flex items-center gap-2">
+            <button type="button"
+                    data-action="click->split-check#copyDetailedSummary"
+                    class="copy-detailed-btn flex items-center gap-1 px-2 py-1 bg-indigo-500 text-white rounded-lg text-xs font-medium hover:bg-indigo-600 transition-colors"
+                    title="Copiar con detalle de articulos">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+              <span class="copy-btn-text">Detalle</span>
+            </button>
+            <button type="button"
+                    data-action="click->split-check#copySummary"
+                    class="copy-summary-btn flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600 transition-colors"
+                    title="Copiar resumen">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+              </svg>
+              <span class="copy-btn-text">Resumen</span>
+            </button>
+          </div>
         </summary>
         <div class="px-4 pb-4">
           <div data-split-check-target="splitSummary" class="space-y-3">

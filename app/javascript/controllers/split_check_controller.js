@@ -10,7 +10,11 @@ export default class extends Controller {
     "tipDisplay",
     "nameModal",
     "nameInput",
-    "copyBtn"
+    "copyBtn",
+    "divideModal",
+    "divideItemName",
+    "divideItemPrice",
+    "divideNInput"
   ]
 
   static values = {
@@ -40,6 +44,9 @@ export default class extends Controller {
     this.lastTapTime = {}
     this.doubleTapDelay = 300
 
+    // Item dividing
+    this.dividingItemRow = null
+
     // Set storage key based on current path
     if (!this.hasStorageKeyValue) {
       this.storageKeyValue = 'splitCheck_' + window.location.pathname
@@ -53,11 +60,56 @@ export default class extends Controller {
   // LocalStorage State Management
   saveState() {
     const assignments = {}
+    const dividedItems = {}
+
     this.itemsContainerTarget.querySelectorAll('[data-item-id]').forEach(row => {
       const itemId = row.dataset.itemId
       const assignedTo = row.dataset.assignedTo
+
+      // Save assignments
       if (assignedTo) {
         assignments[itemId] = assignedTo
+      }
+
+      // Track divided items (headers and their sub-items)
+      if (row.dataset.isDividedHeader === 'true') {
+        const group = row.dataset.group
+        const nameEl = row.querySelector('.truncate')
+        const itemName = nameEl ? nameEl.textContent.replace(' (dividido)', '').trim() : 'Articulo'
+
+        dividedItems[itemId] = {
+          originalItemId: itemId,
+          group: group,
+          itemName: itemName,
+          subItems: []
+        }
+      }
+
+      // Track divided sub-items (they start with 'divided_')
+      if (itemId.startsWith('divided_')) {
+        const group = row.dataset.group
+        const price = parseFloat(row.dataset.price) || 0
+
+        // Find the parent divided item by group
+        const parentRow = this.itemsContainerTarget.querySelector(`[data-group="${group}"][data-is-divided-header="true"]`)
+        if (parentRow) {
+          const parentId = parentRow.dataset.itemId
+          if (!dividedItems[parentId]) {
+            const nameEl = parentRow.querySelector('.truncate')
+            const itemName = nameEl ? nameEl.textContent.replace(' (dividido)', '').trim() : 'Articulo'
+            dividedItems[parentId] = {
+              originalItemId: parentId,
+              group: group,
+              itemName: itemName,
+              subItems: []
+            }
+          }
+          dividedItems[parentId].subItems.push({
+            subItemId: itemId,
+            price: price,
+            assignedTo: assignedTo || ''
+          })
+        }
       }
     })
 
@@ -66,6 +118,7 @@ export default class extends Controller {
       selectedPersonId: this.selectedPersonId,
       nextPersonId: this.nextPersonId,
       assignments: assignments,
+      dividedItems: dividedItems,
       tipPercentage: this.tipInputTarget.value
     }
 
@@ -107,10 +160,44 @@ export default class extends Controller {
         this.tipInputTarget.value = state.tipPercentage
       }
 
-      // Restore assignments
+      // Restore divided items FIRST (before assignments)
+      if (state.dividedItems) {
+        Object.values(state.dividedItems).forEach(divided => {
+          const originalRow = this.itemsContainerTarget.querySelector(`[data-item-id="${divided.originalItemId}"]`)
+          if (originalRow && divided.subItems && divided.subItems.length > 0) {
+            // Convert to header
+            this.convertToHeaderRow(originalRow, divided.itemName)
+
+            // Find the header row again (it was replaced by cloning)
+            const headerRow = this.itemsContainerTarget.querySelector(`[data-item-id="${divided.originalItemId}"]`)
+
+            // Create sub-items
+            let insertAfter = headerRow
+            divided.subItems.forEach((subItem, index) => {
+              const assignedPersonId = subItem.assignedTo ? parseInt(subItem.assignedTo) : null
+              const subRow = this.createDividedSubRowWithId(
+                divided.itemName,
+                subItem.price,
+                divided.group,
+                assignedPersonId,
+                subItem.subItemId
+              )
+              insertAfter.after(subRow)
+              insertAfter = subRow
+            })
+          }
+        })
+      }
+
+      // Restore assignments for non-divided items
       if (state.assignments) {
         this.itemsContainerTarget.querySelectorAll('[data-item-id]').forEach(row => {
           const itemId = row.dataset.itemId
+          // Skip divided sub-items (already handled above) and headers
+          if (itemId.startsWith('divided_') || row.dataset.isDividedHeader === 'true') {
+            return
+          }
+
           const assignedTo = state.assignments[itemId]
           if (assignedTo) {
             const person = this.people.find(p => p.id === parseInt(assignedTo))
@@ -129,6 +216,45 @@ export default class extends Controller {
       console.warn('Could not load state from localStorage:', e)
       return false
     }
+  }
+
+  // Create a divided sub-item with a specific ID (for restoring state)
+  createDividedSubRowWithId(itemName, price, group, assignedToPersonId, specificItemId) {
+    const div = document.createElement('div')
+    div.className = 'cursor-pointer py-1 px-2 -mx-2 rounded transition-all border-l-4'
+    div.style.borderLeftColor = 'transparent'
+    div.dataset.itemId = specificItemId
+    div.dataset.isModifier = 'true'
+    div.dataset.group = group
+    div.dataset.price = price.toFixed(2)
+    div.dataset.assignedTo = ''
+
+    // If assigned to a person, set the color
+    if (assignedToPersonId !== null) {
+      const person = this.people.find(p => p.id === assignedToPersonId)
+      if (person) {
+        const color = this.colors[person.colorIndex % this.colors.length]
+        div.dataset.assignedTo = String(assignedToPersonId)
+        div.style.borderLeftColor = color.hex
+        div.style.backgroundColor = color.hex + '10'
+      }
+    }
+
+    // Style like a modifier (nested, with ÷ prefix to indicate divided)
+    div.innerHTML = `
+      <div class="flex justify-between items-center text-gray-500 text-xs pl-3">
+        <span class="truncate">÷ ${itemName}</span>
+        <span class="ml-2 whitespace-nowrap">$${price.toFixed(2)}</span>
+      </div>
+    `
+
+    // Add click handler
+    div.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.assignItemToPerson(div, this.selectedPersonId)
+    })
+
+    return div
   }
 
   // Modal Management
@@ -454,6 +580,11 @@ export default class extends Controller {
   }
 
   handleRowClick(e) {
+    // Ignore clicks on divide button
+    if (e.target.closest('.divide-btn')) {
+      return
+    }
+
     const row = e.currentTarget
     const isModifier = row.dataset.isModifier === 'true'
     const group = row.dataset.group
@@ -480,6 +611,270 @@ export default class extends Controller {
     }
 
     this.updateSplitSummary()
+  }
+
+  // Handle divide button click
+  handleDivideClick(e) {
+    e.stopPropagation() // Prevent row click
+    const row = e.target.closest('[data-item-id]')
+    if (row) {
+      this.openDivideModal(row)
+    }
+  }
+
+  // Divide Modal Management
+  openDivideModal(row) {
+    // Only allow dividing main items (not modifiers)
+    if (row.dataset.isModifier === 'true') {
+      return
+    }
+
+    this.dividingItemRow = row
+    const price = parseFloat(row.dataset.price) || 0
+    const nameEl = row.querySelector('.truncate')
+    const itemName = nameEl ? nameEl.textContent.trim() : 'Articulo'
+
+    this.divideItemNameTarget.textContent = itemName
+    this.divideItemPriceTarget.textContent = `$${price.toFixed(2)}`
+
+    this.divideModalTarget.classList.remove('hidden')
+    this.divideModalTarget.classList.add('flex')
+  }
+
+  closeDivideModal() {
+    this.divideModalTarget.classList.add('hidden')
+    this.divideModalTarget.classList.remove('flex')
+    this.dividingItemRow = null
+  }
+
+  closeDivideModalOnOutsideClick(e) {
+    if (e.target === this.divideModalTarget) {
+      this.closeDivideModal()
+    }
+  }
+
+  // Divide equally among all people
+  divideEqually() {
+    if (!this.dividingItemRow) return
+
+    const price = parseFloat(this.dividingItemRow.dataset.price) || 0
+    const numPeople = this.people.length
+    const pricePerPerson = price / numPeople
+    const group = this.dividingItemRow.dataset.group
+    const nameEl = this.dividingItemRow.querySelector('.truncate')
+    const itemName = nameEl ? nameEl.textContent.trim() : 'Articulo'
+
+    // Convert main item to header (no price, not clickable for assignment)
+    this.convertToHeaderRow(this.dividingItemRow, itemName)
+
+    // Insert sub-items after the header
+    let insertAfter = this.dividingItemRow
+    this.people.forEach((person, index) => {
+      const subRow = this.createDividedSubRow(itemName, pricePerPerson, group, person.id, index)
+      insertAfter.after(subRow)
+      insertAfter = subRow
+    })
+
+    this.closeDivideModal()
+    this.updateSplitSummary()
+  }
+
+  // Divide into 2 parts
+  divideByTwo() {
+    this.divideIntoN(2)
+  }
+
+  // Divide into N parts
+  divideByN() {
+    const n = parseInt(this.divideNInputTarget.value) || 3
+    this.divideIntoN(n)
+  }
+
+  divideIntoN(n) {
+    if (!this.dividingItemRow || n < 2) return
+
+    const price = parseFloat(this.dividingItemRow.dataset.price) || 0
+    const pricePerPart = price / n
+    const group = this.dividingItemRow.dataset.group
+    const nameEl = this.dividingItemRow.querySelector('.truncate')
+    const itemName = nameEl ? nameEl.textContent.trim() : 'Articulo'
+
+    // Convert main item to header (no price, not clickable for assignment)
+    this.convertToHeaderRow(this.dividingItemRow, itemName)
+
+    // Insert sub-items after the header
+    let insertAfter = this.dividingItemRow
+    for (let i = 0; i < n; i++) {
+      const subRow = this.createDividedSubRow(itemName, pricePerPart, group, null, i)
+      insertAfter.after(subRow)
+      insertAfter = subRow
+    }
+
+    this.closeDivideModal()
+    this.updateSplitSummary()
+  }
+
+  // Convert the main item row into a non-clickable header
+  convertToHeaderRow(row, itemName, originalPrice = null) {
+    // Store original price for undivide
+    const priceToStore = originalPrice || parseFloat(row.dataset.price) || 0
+    row.dataset.originalPrice = priceToStore.toString()
+    row.dataset.price = '0'
+    row.dataset.assignedTo = ''
+    row.dataset.isDividedHeader = 'true'
+    row.dataset.originalName = itemName
+    row.style.borderLeftColor = 'transparent'
+    row.style.backgroundColor = ''
+    row.classList.remove('cursor-pointer')
+    row.classList.add('cursor-default')
+
+    // Update the display to show it's a divided item header with undivide button
+    row.innerHTML = `
+      <div class="flex justify-between items-center text-gray-600 text-sm">
+        <span class="truncate font-medium">${itemName} <span class="text-xs text-gray-400">(dividido)</span></span>
+        <div class="flex items-center gap-2 ml-2">
+          <button type="button"
+                  class="undivide-btn p-1 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded transition-colors"
+                  title="Deshacer division">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+            </svg>
+          </button>
+          <span class="whitespace-nowrap text-gray-400">-</span>
+        </div>
+      </div>
+    `
+
+    // Remove click event by cloning the node
+    const newRow = row.cloneNode(true)
+    row.parentNode.replaceChild(newRow, row)
+    this.dividingItemRow = newRow
+
+    // Add click handler for undivide button
+    const undivideBtn = newRow.querySelector('.undivide-btn')
+    if (undivideBtn) {
+      undivideBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        this.undivideItem(newRow)
+      })
+    }
+  }
+
+  // Restore a divided item back to its original state
+  undivideItem(headerRow) {
+    const group = headerRow.dataset.group
+    const originalPrice = parseFloat(headerRow.dataset.originalPrice) || 0
+    const originalName = headerRow.dataset.originalName || 'Articulo'
+
+    // Remove all divided sub-items for this group
+    const subItems = this.itemsContainerTarget.querySelectorAll(`[data-item-id^="divided_"][data-group="${group}"]`)
+    subItems.forEach(subItem => subItem.remove())
+
+    // Restore the header row to a normal item
+    headerRow.dataset.price = originalPrice.toString()
+    headerRow.dataset.assignedTo = ''
+    delete headerRow.dataset.isDividedHeader
+    delete headerRow.dataset.originalPrice
+    delete headerRow.dataset.originalName
+    // Remove the broken Stimulus action attribute (it doesn't work after cloning)
+    delete headerRow.dataset.action
+    headerRow.classList.remove('cursor-default')
+    headerRow.classList.add('cursor-pointer')
+
+    // Restore the original item display with divide button
+    headerRow.innerHTML = `
+      <div class="flex justify-between items-center text-gray-800 text-sm">
+        <span class="truncate font-medium">${originalName}</span>
+        <div class="flex items-center gap-2 ml-2">
+          <button type="button"
+                  class="divide-btn p-1 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                  title="Dividir articulo">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"></path>
+            </svg>
+          </button>
+          <span class="whitespace-nowrap font-bold">$${originalPrice.toFixed(2)}</span>
+        </div>
+      </div>
+    `
+
+    // Add click handler for the row (main item assignment)
+    headerRow.addEventListener('click', (e) => {
+      // Ignore clicks on divide button
+      if (e.target.closest('.divide-btn')) {
+        return
+      }
+
+      // Main item - assign all items in group
+      const groupRows = this.getGroupRows(group)
+      const currentAssigned = headerRow.dataset.assignedTo
+      const shouldAssign = currentAssigned !== String(this.selectedPersonId)
+
+      groupRows.forEach(r => {
+        if (shouldAssign) {
+          this.assignItemToPerson(r, this.selectedPersonId)
+        } else {
+          // Unassign
+          r.dataset.assignedTo = ''
+          r.style.borderLeftColor = 'transparent'
+          r.style.backgroundColor = ''
+        }
+      })
+
+      this.updateSplitSummary()
+    })
+
+    // Add click handler for divide button
+    const divideBtn = headerRow.querySelector('.divide-btn')
+    if (divideBtn) {
+      divideBtn.addEventListener('click', (e) => {
+        e.stopPropagation()
+        this.openDivideModal(headerRow)
+      })
+    }
+
+    this.updateSplitSummary()
+  }
+
+  // Create a nested sub-item row (modifier style)
+  createDividedSubRow(itemName, price, group, assignedToPersonId, partIndex) {
+    const newItemId = `divided_${Date.now()}_${partIndex}`
+
+    const div = document.createElement('div')
+    div.className = 'cursor-pointer py-1 px-2 -mx-2 rounded transition-all border-l-4'
+    div.style.borderLeftColor = 'transparent'
+    div.dataset.itemId = newItemId
+    div.dataset.isModifier = 'true'  // Treat as modifier for individual assignment
+    div.dataset.group = group  // Same group as parent
+    div.dataset.price = price.toFixed(2)
+    div.dataset.assignedTo = ''
+
+    // If assigned to a person, set the color
+    if (assignedToPersonId !== null) {
+      const person = this.people.find(p => p.id === assignedToPersonId)
+      if (person) {
+        const color = this.colors[person.colorIndex % this.colors.length]
+        div.dataset.assignedTo = String(assignedToPersonId)
+        div.style.borderLeftColor = color.hex
+        div.style.backgroundColor = color.hex + '10'
+      }
+    }
+
+    // Style like a modifier (nested, with ÷ prefix to indicate divided)
+    div.innerHTML = `
+      <div class="flex justify-between items-center text-gray-500 text-xs pl-3">
+        <span class="truncate">÷ ${itemName}</span>
+        <span class="ml-2 whitespace-nowrap">$${price.toFixed(2)}</span>
+      </div>
+    `
+
+    // Add click handler directly (Stimulus doesn't auto-bind dynamically created elements)
+    div.addEventListener('click', (e) => {
+      e.stopPropagation()
+      this.assignItemToPerson(div, this.selectedPersonId)
+    })
+
+    return div
   }
 
   // Tip Management
@@ -516,17 +911,17 @@ export default class extends Controller {
     const totals = {}
     const tipPercent = this.getTipPercentage()
 
-    // Initialize totals for all people
+    // Initialize totals for all people (use string keys for consistency with dataset)
     this.people.forEach(p => {
-      totals[p.id] = 0
+      totals[String(p.id)] = 0
     })
 
-    // Calculate totals
+    // Calculate totals from all items including dynamically created divided sub-items
     rows.forEach(row => {
       const assignedTo = row.dataset.assignedTo
       const price = parseFloat(row.dataset.price) || 0
 
-      if (assignedTo && totals[assignedTo] !== undefined) {
+      if (assignedTo && assignedTo in totals) {
         totals[assignedTo] += price
       }
     })
@@ -544,7 +939,7 @@ export default class extends Controller {
 
     this.people.forEach(person => {
       const color = this.colors[person.colorIndex % this.colors.length]
-      const subtotal = totals[person.id]
+      const subtotal = totals[String(person.id)] || 0
       const tip = subtotal * tipPercent
       const total = subtotal + tip
 
@@ -589,18 +984,95 @@ export default class extends Controller {
     this.saveState()
   }
 
+  // Detailed WhatsApp Text Generation (with items per person)
+  generateDetailedWhatsAppText() {
+    const tipPercent = this.getTipPercentage()
+    const rows = Array.from(this.itemsContainerTarget.querySelectorAll('[data-item-id]'))
+
+    // Circle emojis matching color palette
+    const circleEmojis = ['🔵', '🟢', '🟡', '🟣', '🔴', '🩵', '🩷', '🔷']
+
+    // Helper to format currency with padding
+    const formatMoney = (amount) => {
+      return '$' + amount.toFixed(2).padStart(7)
+    }
+
+    let grandSubtotal = 0
+    let grandTotal = 0
+
+    // Build the text
+    let text = '🧾 *División de Cuenta - Detalle*\n'
+    text += '```\n'
+
+    this.people.forEach((person) => {
+      const emoji = circleEmojis[person.colorIndex % circleEmojis.length]
+      const personItems = []
+      let personSubtotal = 0
+
+      // Find all items assigned to this person
+      rows.forEach(row => {
+        if (row.dataset.assignedTo === String(person.id)) {
+          const price = parseFloat(row.dataset.price) || 0
+          if (price > 0) {
+            // Get item name from the row
+            const nameEl = row.querySelector('.truncate')
+            let itemName = nameEl ? nameEl.textContent.trim() : 'Articulo'
+            // Clean up the name (remove ÷ prefix if present)
+            itemName = itemName.replace(/^[÷+]\s*/, '')
+            personItems.push({ name: itemName, price: price })
+            personSubtotal += price
+          }
+        }
+      })
+
+      const personTip = personSubtotal * tipPercent
+      const personTotal = personSubtotal + personTip
+      grandSubtotal += personSubtotal
+      grandTotal += personTotal
+
+      text += '------------------------------\n'
+      text += `${emoji} ${person.name}\n`
+
+      // List items
+      if (personItems.length > 0) {
+        personItems.forEach(item => {
+          const truncatedName = item.name.length > 18 ? item.name.substring(0, 18) + '...' : item.name
+          text += `  • ${truncatedName.padEnd(18)} ${formatMoney(item.price)}\n`
+        })
+        text += `  ────────────────────────\n`
+      }
+
+      text += `  Subtotal:            ${formatMoney(personSubtotal)}\n`
+      if (tipPercent > 0) {
+        text += `  Propina (${(tipPercent * 100).toFixed(0)}%):      ${formatMoney(personTip)}\n`
+      }
+      text += `  TOTAL:               ${formatMoney(personTotal)}\n`
+    })
+
+    text += '------------------------------\n'
+    if (tipPercent > 0) {
+      text += `Subtotal:              ${formatMoney(grandSubtotal)}\n`
+      text += `Propina (${(tipPercent * 100).toFixed(0)}%):        ${formatMoney(grandTotal - grandSubtotal)}\n`
+    }
+    text += `💰 TOTAL:              ${formatMoney(grandTotal)}\n`
+    text += '```'
+
+    return text
+  }
+
   // WhatsApp Text Generation
   generateWhatsAppText() {
     const tipPercent = this.getTipPercentage()
-    const rows = this.itemsContainerTarget.querySelectorAll('[data-item-id]')
     const totals = {}
 
-    // Calculate totals
-    this.people.forEach(p => { totals[p.id] = 0 })
-    rows.forEach(row => {
+    // Initialize totals for all people (use string keys for consistency with dataset)
+    this.people.forEach(p => { totals[String(p.id)] = 0 })
+
+    // Calculate totals from all items including dynamically created divided sub-items
+    this.itemsContainerTarget.querySelectorAll('[data-item-id]').forEach(row => {
       const assignedTo = row.dataset.assignedTo
       const price = parseFloat(row.dataset.price) || 0
-      if (assignedTo && totals[assignedTo] !== undefined) {
+      if (assignedTo && assignedTo in totals) {
         totals[assignedTo] += price
       }
     })
@@ -621,7 +1093,7 @@ export default class extends Controller {
     mono += '------------------------------\n'
 
     this.people.forEach((person) => {
-      const subtotal = totals[person.id]
+      const subtotal = totals[String(person.id)] || 0
       const tip = subtotal * tipPercent
       const total = subtotal + tip
       grandSubtotal += subtotal
@@ -678,6 +1150,39 @@ export default class extends Controller {
         }
         copyBtn.classList.remove('bg-emerald-600')
         copyBtn.classList.add('bg-green-500', 'hover:bg-green-600')
+      }, 2000)
+    } catch (err) {
+      console.error('Failed to copy:', err)
+      if (copyBtnText) {
+        copyBtnText.textContent = 'Error'
+        setTimeout(() => {
+          copyBtnText.textContent = originalText
+        }, 2000)
+      }
+    }
+  }
+
+  // Copy detailed summary with items per person
+  async copyDetailedSummary(e) {
+    const copyBtn = e.currentTarget
+    const copyBtnText = copyBtn.querySelector('.copy-btn-text')
+    const originalText = copyBtnText ? copyBtnText.textContent : ''
+
+    const text = this.generateDetailedWhatsAppText()
+
+    try {
+      await navigator.clipboard.writeText(text)
+
+      // Show success feedback (keep indigo color)
+      if (copyBtnText) {
+        copyBtnText.textContent = '\u00A1Copiado!'
+      }
+
+      // Reset after 2 seconds
+      setTimeout(() => {
+        if (copyBtnText) {
+          copyBtnText.textContent = originalText
+        }
       }, 2000)
     } catch (err) {
       console.error('Failed to copy:', err)
