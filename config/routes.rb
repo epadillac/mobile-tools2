@@ -61,5 +61,6 @@ Rails.application.routes.draw do
     resource :toast, only: :show
   end
 
-  root "components#index"
+  # root "components#index"
+  root 'split_checks#new'
 end
