@@ -82,6 +82,7 @@
     <orderEntry type="library" scope="PROVIDED" name="jbuilder (v2.14.1, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="jmespath (v1.6.2, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="json (v2.13.2, RVM: ruby-3.4.7) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="jwt (v2.10.2, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="kamal (v2.7.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="language_server-protocol (v3.17.0.5, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="lint_roller (v1.1.0, RVM: ruby-3.4.7) [gem]" level="application" />
@@ -139,7 +140,7 @@
     <orderEntry type="library" scope="PROVIDED" name="rubocop-rails-omakase (v1.1.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="ruby-progressbar (v1.13.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="ruby-vips (v2.3.0, RVM: ruby-3.4.7) [gem]" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="ruby_native (v0.5.0, RVM: ruby-3.4.7) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="ruby_native (v0.9.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rubyzip (v3.2.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="securerandom (v0.4.1, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="selenium-webdriver (v4.36.0, RVM: ruby-3.4.7) [gem]" level="application" />
