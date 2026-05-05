@@ -29,7 +29,7 @@
 
   <body>
     <%= native_tabs_tag %>
-    <% if not hotwire_native_app? and not native_app? %>
+    <% unless native_shell? %>
       <%= render "shared/split_check_nav" %>
       <div data-controller="bridge--menu" data-bridge-color="#007AFF" class="hidden">
         <%= link_to "Subir nuevo ticket", new_split_check_path, class: "list-group-item list-group-item-action", data: {

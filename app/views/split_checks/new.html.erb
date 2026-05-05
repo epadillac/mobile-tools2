@@ -21,22 +21,7 @@
       </div>
     <% end %>
 
-    <!-- User-agent banner: shows the browser/device string Rails sees for the
-         current request. Useful while debugging Hotwire Native vs. plain
-         browser behavior. Tailwind "info"-style alert (blue). -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
-      <div class="flex items-start gap-3">
-        <svg class="w-5 h-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-        </svg>
-        <div class="min-w-0 flex-1">
-          <p class="text-blue-800 font-semibold text-sm">User-Agent</p>
-          <p class="text-blue-700 text-xs mt-1 break-all font-mono"><%= request.user_agent.presence || "(unknown)" %></p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white rounded-xl shadow-lg p-8">
+    <div class="bg-white rounded-xl shadow-lg p-8 mb-4">
       <% unless hotwire_native_app? %><h1 class="text-3xl font-bold text-gray-800 mb-2">Dividir Cuenta</h1><% end %>
       <p class="text-gray-600 mb-2">Sube una foto de tu ticket de restaurante para dividir la cuenta</p>
       <p class="mb-8"><%= link_to "📖 ¿Cómo funciona?", manual_split_checks_url, class: "text-indigo-500 text-sm font-medium hover:text-indigo-700" %></p>
@@ -117,5 +102,22 @@
         </button>
       <% end %>
     </div>
+
+    <% unless native_shell? %>
+    <!-- User-agent banner: shows the browser/device string Rails sees for the
+         current request. Useful while debugging Hotwire Native vs. plain
+         browser behavior. Tailwind "info"-style alert (blue). -->
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-lg">
+      <div class="flex items-start gap-3">
+        <svg class="w-5 h-5 text-blue-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <div class="min-w-0 flex-1">
+          <p class="text-blue-800 font-semibold text-sm">User-Agent</p>
+          <p class="text-blue-700 text-xs mt-1 break-all font-mono"><%= request.user_agent.presence || "(unknown)" %></p>
+        </div>
+      </div>
+    </div>
+    <% end %>
   </div>
 </div>
