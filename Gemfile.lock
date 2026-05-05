@@ -160,6 +160,8 @@ GEM
       activesupport (>= 7.0.0)
     jmespath (1.6.2)
     json (2.13.2)
+    jwt (2.10.2)
+      base64
     kamal (2.7.0)
       activesupport (>= 7.0)
       base64 (~> 0.2)
@@ -336,7 +338,8 @@ GEM
     ruby-vips (2.3.0)
       ffi (~> 1.12)
       logger
-    ruby_native (0.5.0)
+    ruby_native (0.9.0)
+      jwt (~> 2.0)
       rails (>= 7.1)
       rqrcode (~> 3.0)
     rubyzip (3.2.0)
@@ -433,7 +436,7 @@ DEPENDENCIES
   puma (>= 5.0)
   rails (~> 8.0.2)
   rubocop-rails-omakase
-  ruby_native (~> 0.5.0)
+  ruby_native (~> 0.9.0)
   selenium-webdriver
   solid_cable
   solid_cache
