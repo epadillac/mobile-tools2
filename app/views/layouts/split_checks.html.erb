@@ -2,7 +2,11 @@
 <html <%= "data-hotwire-native" if hotwire_native_app? %>>
   <head>
     <title><%= content_for(:title) || "Split Check" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%# viewport-fit=cover is required for iOS WKWebView to expose
+        env(safe-area-inset-*) to CSS. Without it the .native-inset-top
+        class from the ruby_native gem evaluates to height:0 and the
+        notch/Dynamic-Island area overlaps page content. %>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <%= csrf_meta_tags %>

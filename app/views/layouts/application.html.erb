@@ -2,7 +2,11 @@
 <html>
   <head>
     <title><%= content_for(:title) || "Demo" %></title>
-    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%# viewport-fit=cover is required for iOS WKWebView to expose
+        env(safe-area-inset-*) to CSS. Without it the .native-inset-top
+        class from the ruby_native gem evaluates to height:0 and the
+        notch/Dynamic-Island area overlaps page content. %>
+    <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
