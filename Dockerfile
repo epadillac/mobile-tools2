@@ -20,10 +20,19 @@ WORKDIR /rails
 RUN gem update --system --no-document && \
     gem install -N bundler
 
-# Install base packages (including ImageMagick for image processing)
+# Install base packages.
+# - imagemagick: image processing for receipts
+# - chromium: headless browser used by ReceiptScreenshotService (~150MB extra,
+#   omit if you don't need Telegram screenshot notifications)
+# - libjemalloc2: lower-fragmentation allocator preloaded by docker-entrypoint
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libjemalloc2 sqlite3 imagemagick && \
+    apt-get install --no-install-recommends -y \
+      curl libjemalloc2 sqlite3 imagemagick \
+      chromium chromium-sandbox fonts-liberation libnss3 libxss1 && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+# Tell ReceiptScreenshotService where Chromium lives in this image.
+ENV CHROME_BIN="/usr/bin/chromium"
 
 # Set production environment
 ENV BUNDLE_DEPLOYMENT="1" \

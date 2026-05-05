@@ -1,0 +1,149 @@
+<% content_for(:title) { "Factura Lista - #{@result[:business_name] || 'Facturar'}" } %>
+
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-2xl mx-auto px-4">
+
+    <%# Header %>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold text-gray-800">🧾 Factura Generada</h1>
+      </div>
+
+      <% if @result[:business_name].present? %>
+        <p class="text-gray-500 text-sm">Facturada en: <span class="font-semibold text-gray-700"><%= @result[:business_name] %></span></p>
+      <% end %>
+
+      <%# Ticket summary %>
+      <% data = @invoice_data %>
+      <% if data.values.any?(&:present?) %>
+        <div class="mt-3 bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
+          <div class="flex flex-wrap gap-x-4 gap-y-1">
+            <% if data[:folio].present? %><span>Folio: <strong><%= data[:folio] %></strong></span><% end %>
+            <% if data[:importe].present? %><span>Importe: <strong>$<%= number_with_precision(data[:importe], precision: 2, delimiter: ',') %></strong></span><% end %>
+            <% if data[:fecha].present? %><span>Fecha: <strong><%= data[:fecha] %></strong></span><% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Step indicator - all completed %>
+    <div class="flex items-center justify-center gap-2 mb-4">
+      <div class="flex items-center gap-1">
+        <div class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+        <span class="text-xs text-emerald-700 font-medium">Ticket</span>
+      </div>
+      <div class="w-8 h-0.5 bg-emerald-300"></div>
+      <div class="flex items-center gap-1">
+        <div class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+        <span class="text-xs text-emerald-700 font-medium">RFC</span>
+      </div>
+      <div class="w-8 h-0.5 bg-emerald-300"></div>
+      <div class="flex items-center gap-1">
+        <div class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+        <span class="text-xs text-emerald-700 font-medium">Datos fiscales</span>
+      </div>
+      <div class="w-8 h-0.5 bg-emerald-300"></div>
+      <div class="flex items-center gap-1">
+        <div class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+        <span class="text-xs text-emerald-700 font-medium">Facturar</span>
+      </div>
+    </div>
+
+    <%# Success message %>
+    <% if @already_invoiced %>
+      <div class="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+            <svg class="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-amber-800">Este ticket ya estaba facturado</h3>
+            <p class="text-sm text-amber-600 mt-1">
+              Se recuperaron los archivos de la factura existente.
+              <br>RFC: <strong><%= @rfc %></strong>
+            </p>
+          </div>
+        </div>
+      </div>
+    <% else %>
+      <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-6 mb-4">
+        <div class="flex items-start gap-3">
+          <div class="flex-shrink-0 w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+            <svg class="w-7 h-7 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-lg font-semibold text-emerald-800">Factura generada exitosamente</h3>
+            <p class="text-sm text-emerald-600 mt-1">
+              RFC: <strong><%= @rfc %></strong>
+              <% if @email.present? %>
+                <br>Enviada a: <strong><%= @email %></strong>
+              <% end %>
+            </p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Download buttons %>
+    <% if @has_pdf || @has_xml %>
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          Descargar archivos
+        </h3>
+
+        <div class="space-y-3">
+          <% if @has_pdf %>
+            <a href="<%= download_pdf_invoice_path(id: 'current') %>"
+               class="flex items-center gap-3 w-full bg-red-50 hover:bg-red-100 border border-red-200 rounded-xl p-4 transition-colors">
+              <div class="flex-shrink-0 w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-red-800">Descargar PDF</p>
+                <p class="text-xs text-red-500">Factura_<%= @rfc %>.pdf</p>
+              </div>
+              <svg class="w-5 h-5 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+            </a>
+          <% end %>
+
+          <% if @has_xml %>
+            <a href="<%= download_xml_invoice_path(id: 'current') %>"
+               class="flex items-center gap-3 w-full bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl p-4 transition-colors">
+              <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path>
+                </svg>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-semibold text-blue-800">Descargar XML</p>
+                <p class="text-xs text-blue-500">Factura_<%= @rfc %>.xml</p>
+              </div>
+              <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+              </svg>
+            </a>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <%# Scan another %>
+    <div class="text-center mt-6">
+      <%= link_to new_invoice_path, class: "inline-flex items-center gap-2 bg-white border border-gray-300 text-gray-700 py-3 px-6 rounded-xl font-semibold hover:bg-gray-50 transition-colors" do %>
+        📷 Facturar otro ticket
+      <% end %>
+    </div>
+
+  </div>
+</div>

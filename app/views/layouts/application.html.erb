@@ -13,10 +13,19 @@
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= stylesheet_link_tag "native", "data-turbo-track": "reload" if hotwire_native_app? %>
     <%= javascript_importmap_tags %>
+    <%= stylesheet_link_tag :ruby_native %>
   </head>
 
   <body data-controller="theme">
-    <main class="mb-5">
+    <%= native_tabs_tag %>
+    <% unless current_page?(components_path) %>
+      <header class="container mt-3 mb-4">
+        <%= link_to components_url, class: "btn btn-outline-secondary", data: { turbo: false } do %>
+          <i class="bi bi-arrow-left"></i> Components index
+        <% end %>
+      </header>
+    <% end %>
+    <main class="mb-5 <%= 'native-inset-top' if native_app? %>">
       <%= yield %>
     </main>
   </body>

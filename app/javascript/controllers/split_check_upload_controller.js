@@ -13,7 +13,17 @@ export default class extends Controller {
     "fileName",
     "submitBtn",
     "submitText",
-    "submitLoading"
+    "submitLoading",
+    "loadingText"
+  ]
+
+  static loadingMessages = [
+    { text: "Subiendo imagen...", delay: 0 },
+    { text: "Leyendo el ticket...", delay: 2000 },
+    { text: "Identificando artículos...", delay: 6000 },
+    { text: "Calculando totales...", delay: 12000 },
+    { text: "Casi listo, preparando resultados...", delay: 18000 },
+    { text: "Gracias por tu paciencia, aún procesando...", delay: 28000 }
   ]
 
   connect() {
@@ -155,5 +165,20 @@ export default class extends Controller {
     this.submitBtnTarget.disabled = true
     this.submitBtnTarget.classList.add('opacity-75', 'cursor-not-allowed')
     this.submitBtnTarget.classList.remove('hover:bg-indigo-700')
+    this.startLoadingMessages()
+  }
+
+  startLoadingMessages() {
+    if (!this.hasLoadingTextTarget) return
+
+    this.loadingTimeouts = this.constructor.loadingMessages.map(({ text, delay }) =>
+      setTimeout(() => { this.loadingTextTarget.textContent = text }, delay)
+    )
+  }
+
+  disconnect() {
+    if (this.loadingTimeouts) {
+      this.loadingTimeouts.forEach(clearTimeout)
+    }
   }
 }

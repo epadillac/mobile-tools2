@@ -63,6 +63,13 @@ Rails.application.configure do
   # Allow all subdomains of ngrok.io.
   config.hosts << '.ngrok.io'
   config.hosts << '.ngrok-free.app'
+  config.hosts << '.ngrok-free.dev'
   config.hosts << '.trycloudflare.com'
+  config.hosts << '.trycloudflare.dev'
   config.hosts << '.bambuapps.xyz'
+
+  # Default SameSite=Lax works for direct navigation (including https ngrok tunnels) and for
+  # plain http://localhost. Avoid `secure: true` here because it drops the cookie when debugging
+  # over plain HTTP from RubyMine, which breaks session-based flows like /split_checks/current.
+  config.session_store :cookie_store, key: '_mobile_tools_session'
 end

@@ -57,6 +57,7 @@
     <orderEntry type="library" scope="PROVIDED" name="builder (v3.3.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="bundler (v2.6.8, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="capybara (v3.40.0, RVM: ruby-3.4.7) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="chunky_png (v1.4.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="concurrent-ruby (v1.3.5, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="connection_pool (v2.5.4, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="crass (v1.0.6, RVM: ruby-3.4.7) [gem]" level="application" />
@@ -129,6 +130,8 @@
     <orderEntry type="library" scope="PROVIDED" name="regexp_parser (v2.11.3, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="reline (v0.6.2, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rexml (v3.4.4, RVM: ruby-3.4.7) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rqrcode (v3.2.0, RVM: ruby-3.4.7) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="rqrcode_core (v2.1.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rubocop (v1.81.1, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rubocop-ast (v1.47.1, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rubocop-performance (v1.26.0, RVM: ruby-3.4.7) [gem]" level="application" />
@@ -136,6 +139,7 @@
     <orderEntry type="library" scope="PROVIDED" name="rubocop-rails-omakase (v1.1.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="ruby-progressbar (v1.13.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="ruby-vips (v2.3.0, RVM: ruby-3.4.7) [gem]" level="application" />
+    <orderEntry type="library" scope="PROVIDED" name="ruby_native (v0.5.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="rubyzip (v3.2.0, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="securerandom (v0.4.1, RVM: ruby-3.4.7) [gem]" level="application" />
     <orderEntry type="library" scope="PROVIDED" name="selenium-webdriver (v4.36.0, RVM: ruby-3.4.7) [gem]" level="application" />
@@ -285,6 +289,12 @@
     <entry key="config">
       <value>file://$MODULE_DIR$/config</value>
     </entry>
+    <entry key="config/cable">
+      <value>file://$MODULE_DIR$/config/cable.yml</value>
+    </entry>
+    <entry key="config/cache">
+      <value>file://$MODULE_DIR$/config/cache.yml</value>
+    </entry>
     <entry key="config/database">
       <value>file://$MODULE_DIR$/config/database.yml</value>
     </entry>
@@ -305,6 +315,9 @@
     </entry>
     <entry key="config/routes.rb">
       <value>file://$MODULE_DIR$/config/routes.rb</value>
+    </entry>
+    <entry key="config/solid_cache">
+      <value>file://$MODULE_DIR$/config/solid_cache.yml</value>
     </entry>
     <entry key="db">
       <value>file://$MODULE_DIR$/db</value>
@@ -340,6 +353,7 @@
       <value>file://$MODULE_DIR$/public/stylesheets</value>
     </entry>
     <entry key="test/mailers/previews">
+      <value>file://$MODULE_DIR$/test/mailers/previews</value>
       <value>file://$MODULE_DIR$/test/mailers/previews</value>
     </entry>
     <entry key="tmp">

@@ -1,0 +1,90 @@
+name: Deploy via Kamal
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:        # lets you trigger a deploy manually from the Actions tab
+
+# Cancel any in-flight deploy if a newer commit lands on main.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Build & deploy to DigitalOcean
+    runs-on: ubuntu-24.04
+
+    # Tighten permissions to only what's needed: read code, push container to GHCR.
+    permissions:
+      contents: read
+      packages: write
+
+    env:
+      # Kamal needs a real Docker registry token in the env at deploy time.
+      # Using the workflow-scoped GITHUB_TOKEN is enough for ghcr.io pushes
+      # under the same org/user. If your image lives in a different registry
+      # (DOCR, Docker Hub), swap to a `secrets.KAMAL_REGISTRY_PASSWORD`.
+      KAMAL_REGISTRY_PASSWORD: ${{ secrets.KAMAL_REGISTRY_PASSWORD || secrets.GITHUB_TOKEN }}
+
+      # Secrets passed through to the running container via .kamal/secrets.
+      # Deploy targets — kept out of config/deploy.yml so they never land in git.
+      DROPLET_IP:              ${{ secrets.DROPLET_IP }}
+      DEPLOY_DOMAIN:           ${{ secrets.DEPLOY_DOMAIN }}
+      KAMAL_REGISTRY_USER:     ${{ secrets.KAMAL_REGISTRY_USER || github.actor }}
+
+      # Application secrets injected into the running container.
+      RAILS_MASTER_KEY:        ${{ secrets.RAILS_MASTER_KEY }}
+      GEMINI_API_KEY:          ${{ secrets.GEMINI_API_KEY }}
+      ANTHROPIC_API_KEY:       ${{ secrets.ANTHROPIC_API_KEY }}
+      TELEGRAM_BOT_TOKEN:      ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_NOTIFY_CHAT_ID: ${{ secrets.TELEGRAM_NOTIFY_CHAT_ID }}
+      # S3-compatible backup credentials (currently disabled — uncomment if
+      # you turn on Litestream off-server backup).
+      # AWS_ACCESS_KEY_ID:       ${{ secrets.AWS_ACCESS_KEY_ID }}
+      # AWS_SECRET_ACCESS_KEY:   ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0      # Kamal tags images with the git SHA; full history is safest
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          bundler-cache: true   # caches gems keyed off Gemfile.lock
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ env.KAMAL_REGISTRY_PASSWORD }}
+
+      - name: Install SSH key for the droplet
+        # Kamal SSHs into the server to run `docker pull` + boot the new image.
+        # Store the private half as the `SSH_PRIVATE_KEY` secret; the public half
+        # must already be in the droplet's ~/.ssh/authorized_keys for `root`
+        # (or whichever user is set under `ssh:` in config/deploy.yml).
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Trust the droplet's host key
+        # Avoids the interactive yes/no prompt on the first SSH connection.
+        # The IP is templated into config/deploy.yml from the DROPLET_IP secret,
+        # so we just keyscan that same value here.
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          ssh-keyscan -H "$DROPLET_IP" >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 600 ~/.ssh/known_hosts
+
+      - name: Kamal deploy
+        # `kamal deploy` reads .kamal/secrets, which is sourced as a shell file.
+        # The secrets there reference $VAR names, which resolve from the env
+        # block above — so nothing sensitive ever lands on disk in the runner.
+        run: bin/kamal deploy

@@ -1,9 +1,5 @@
 <% content_for(:title) { "Dividir Cuenta - Articulos" } %>
 
-<% content_for :head do %>
-<!--  <meta name="turbo-visit-control" content="reload">-->
-<% end %>
-
 <div data-controller="split-check">
   <!-- Modal para editar nombre -->
   <div data-split-check-target="nameModal"
@@ -102,13 +98,56 @@
     </div>
   </div>
 
+  <!-- Modal "Dividir total entre N personas" — used instead of window.prompt
+       because Hotwire Native (WKWebView/Android WebView) doesn't surface
+       native prompt() dialogs unless the host app implements WKUIDelegate. -->
+  <div data-split-check-target="equalSplitModal"
+       data-action="click->split-check#closeEqualSplitModalOnOutsideClick"
+       class="fixed inset-0 bg-black/50 hidden items-center justify-center z-50">
+    <div class="bg-white rounded-xl shadow-2xl p-6 mx-4 w-full max-w-sm">
+      <h3 class="text-lg font-bold text-gray-800 mb-2">Dividir total</h3>
+      <p class="text-sm text-gray-500 mb-4">¿Entre cuántas personas dividir el total del ticket?</p>
+
+      <input type="number"
+             inputmode="numeric"
+             data-split-check-target="equalSplitInput"
+             data-action="keydown.enter->split-check#confirmEqualSplit"
+             min="1"
+             max="50"
+             value="2"
+             class="w-full px-4 py-3 border border-gray-300 rounded-lg text-center font-bold text-2xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+
+      <div class="flex gap-2 mt-4">
+        <button type="button"
+                data-action="click->split-check#closeEqualSplitModal"
+                class="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors">
+          Cancelar
+        </button>
+        <button type="button"
+                data-action="click->split-check#confirmEqualSplit"
+                class="flex-1 px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-700 transition-colors">
+          Dividir
+        </button>
+      </div>
+    </div>
+  </div>
+
   <div class="min-h-screen bg-gray-100 py-8">
     <div class="max-w-4xl mx-auto px-4">
       <!-- Comparacion de Totales (solo mostrar si hay diferencia) -->
       <% subtotal = @items.sum { |item| item[:price] } %>
       <% if @receipt_total && @receipt_total > 0 %>
         <% difference = (@receipt_total - subtotal).abs %>
-        <% unless difference < 1.0 %>
+        <% if difference == 0.0 %>
+          <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
+            <div class="flex items-center justify-between">
+              <h2 class="text-lg font-bold text-gray-800">Verificacion de Totales</h2>
+              <span class="px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-700">
+                ✅ Totales coinciden
+              </span>
+            </div>
+          </div>
+        <% else %>
           <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
             <div class="flex items-center justify-between">
               <h2 class="text-lg font-bold text-gray-800">Verificacion de Totales</h2>
@@ -129,6 +168,9 @@
           </div>
         <% end %>
       <% end %>
+
+      <!-- Manual link -->
+      <p class="mb-4 text-center"><%= link_to "📖 ¿Cómo funciona?", manual_split_checks_url, class: "text-indigo-500 text-sm font-medium hover:text-indigo-700" %></p>
 
       <!-- Personas y Propina (Combined) -->
       <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
@@ -171,6 +213,12 @@
         <!-- People buttons -->
         <div data-split-check-target="peopleContainer" class="flex flex-wrap gap-2 mb-3">
           <!-- People will be added here by JavaScript -->
+        </div>
+
+        <!-- "Dividir total" button on its own row so it reads as a primary action,
+             not as another person pill. -->
+        <div data-split-check-target="equalSplitContainer" class="mb-3">
+          <!-- Rendered by split_check_controller.renderEqualSplitButton -->
         </div>
 
         <!-- Propina collapsible -->

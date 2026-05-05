@@ -7,7 +7,8 @@
 # Ignore bundler config.
 /.bundle
 
-# Ignore all environment files.
+# Ignore all environment files. .env.example is also excluded — the image
+# never needs it, only humans cloning the repo do.
 /.env*
 
 # Ignore all default key files.
@@ -49,3 +50,18 @@
 # Ignore Docker-related files
 /.dockerignore
 /Dockerfile*
+
+# Local-only macOS dev tooling — these contain secrets (e.g. ngrok authtokens)
+# and are useless inside a Linux container. Never ship to production.
+/start-on-boot.sh
+/start-with-tunnel.sh
+/ngrok.sh
+/ngrok-stop.sh
+/tunnel.sh
+/tunnel-stop.sh
+/bin/ngrok
+*.plist
+/CLAUDE.md
+/test_gemini.*
+/test_receipts*
+/whatsapp-example.txt

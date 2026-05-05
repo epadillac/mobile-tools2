@@ -1,0 +1,73 @@
+<% if hotwire_native_app? %>
+<% content_for(:title) { "Facturar" } %>
+<% else %>
+<% content_for(:title) { "Facturar - Subir Ticket" } %>
+<% end %>
+
+<div class="min-h-screen bg-gray-100 py-8" data-controller="split-check-upload">
+  <div class="max-w-2xl mx-auto px-4">
+    <% if flash[:alert] %>
+      <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded-lg">
+        <div class="flex items-center">
+          <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <p class="text-red-700 font-medium"><%= flash[:alert] %></p>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="bg-white rounded-xl shadow-lg p-8">
+      <% unless hotwire_native_app? %><h1 class="text-3xl font-bold text-gray-800 mb-2">🧾 Facturar</h1><% end %>
+      <p class="text-gray-600 mb-2">Sube una foto de tu ticket para encontrar el link de facturación</p>
+      <p class="text-gray-500 text-sm mb-8">Detectamos automáticamente URLs y códigos QR para generar tu factura</p>
+
+      <%= form_with url: invoices_path, method: :post, multipart: true, class: "space-y-6", data: { turbo: false, action: "submit->split-check-upload#submitForm" } do |f| %>
+        <div data-split-check-upload-target="dropZone"
+             data-action="click->split-check-upload#openFilePicker dragenter->split-check-upload#dragEnter dragover->split-check-upload#dragOver dragleave->split-check-upload#dragLeave drop->split-check-upload#drop"
+             class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-emerald-500 transition-colors cursor-pointer">
+          <div data-split-check-upload-target="uploadContent" class="space-y-4">
+            <div class="flex justify-center">
+              <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+              </svg>
+            </div>
+            <div>
+              <span class="text-emerald-600 font-semibold">Clic para agregar ticket</span>
+              <span data-split-check-upload-target="dragText" class="text-gray-500"> o arrastra y suelta</span>
+              <%= file_field_tag :receipt_image,
+                                 accept: "image/*",
+                                 class: "hidden",
+                                 data: {
+                                   split_check_upload_target: "fileInput",
+                                   action: "change->split-check-upload#handleFileSelect"
+                                 } %>
+            </div>
+            <p class="text-sm text-gray-500">PNG, JPG hasta 4MB</p>
+          </div>
+
+          <div data-split-check-upload-target="imagePreview" class="hidden mt-6">
+            <img data-split-check-upload-target="previewImg" class="max-h-20 mx-auto rounded-lg shadow" />
+            <p data-split-check-upload-target="fileName" class="mt-2 text-sm text-gray-600"></p>
+            <button type="button"
+                    data-action="click->split-check-upload#clearImage"
+                    class="mt-2 text-red-500 text-sm hover:text-red-700">Eliminar imagen</button>
+          </div>
+        </div>
+
+        <button type="submit"
+                data-split-check-upload-target="submitBtn"
+                class="hidden w-full bg-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-emerald-700 transition-colors cursor-pointer">
+          <span data-split-check-upload-target="submitText">Buscar datos de facturación</span>
+          <span data-split-check-upload-target="submitLoading" class="hidden items-center justify-center gap-2">
+            <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Analizando ticket...
+          </span>
+        </button>
+      <% end %>
+    </div>
+  </div>
+</div>

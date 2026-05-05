@@ -37,6 +37,10 @@ module Demo
     #
     config.time_zone = "Central Time (US & Canada)"
 
+    # Use cache-based sessions to avoid 4KB cookie size limit
+    # (Large receipts with 20+ items exceed cookie capacity)
+    config.session_store :cache_store, expire_after: 1.hour
+
     # Don't generate system test files.
     config.generators.system_tests = nil
   end

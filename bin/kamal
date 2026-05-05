@@ -10,6 +10,23 @@
 
 ENV["BUNDLE_GEMFILE"] ||= File.expand_path("../Gemfile", __dir__)
 
+# Load .env from the project root so config/deploy.yml's `<%= ENV.fetch("...") %>`
+# substitutions work without forcing the user to remember `set -a; . .env; set +a`
+# every time. Existing ENV vars win — anything passed inline (e.g. by a CI runner)
+# is not overwritten by .env.
+env_file = File.expand_path("../.env", __dir__)
+if File.exist?(env_file)
+  File.foreach(env_file) do |line|
+    line = line.strip
+    next if line.empty? || line.start_with?("#")
+    key, _, value = line.partition("=")
+    next if key.empty?
+    # Strip surrounding quotes if present, like `FOO="bar"` or `FOO='bar'`.
+    value = value.sub(/\A(['"])(.*)\1\z/, '\2')
+    ENV[key] ||= value
+  end
+end
+
 bundle_binstub = File.expand_path("bundle", __dir__)
 
 if File.file?(bundle_binstub)

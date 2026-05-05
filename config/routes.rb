@@ -1,6 +1,21 @@
 Rails.application.routes.draw do
   resources :split_checks, only: %i[new create show] do
-    get :demo, on: :collection
+    collection do
+      get :demo
+      get :manual
+    end
+  end
+
+  resources :invoices, only: %i[new create show] do
+    member do
+      post :verify
+      get  :datos_fiscales
+      post :lookup_rfc
+      post :generate_invoice
+      get  :download_pdf
+      get  :download_xml
+      get  :factura_lista
+    end
   end
 
   resources :components, only: :index

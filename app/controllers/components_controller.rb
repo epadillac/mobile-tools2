@@ -1,3 +1,3 @@
 class ComponentsController < ApplicationController
-  layout "split_checks"
+  layout "application"
 end

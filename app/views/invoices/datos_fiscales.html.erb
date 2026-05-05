@@ -1,0 +1,276 @@
+<% content_for(:title) { "Datos Fiscales - #{@result[:business_name] || 'Facturar'}" } %>
+
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-2xl mx-auto px-4">
+
+    <%# Header %>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold text-gray-800">🧾 Datos Fiscales</h1>
+        <%= link_to invoice_path(id: "current"), class: "text-emerald-600 text-sm font-medium hover:text-emerald-700" do %>
+          ← Volver al ticket
+        <% end %>
+      </div>
+
+      <% if @result[:business_name].present? %>
+        <p class="text-gray-500 text-sm">Facturando en: <span class="font-semibold text-gray-700"><%= @result[:business_name] %></span></p>
+      <% end %>
+
+      <%# Ticket summary %>
+      <% data = @invoice_data %>
+      <% if data.values.any?(&:present?) %>
+        <div class="mt-3 bg-gray-50 rounded-lg p-3 text-sm text-gray-600">
+          <div class="flex flex-wrap gap-x-4 gap-y-1">
+            <% if data[:serie].present? %><span>Serie: <strong><%= data[:serie] %></strong></span><% end %>
+            <% if data[:folio].present? %><span>Folio: <strong><%= data[:folio] %></strong></span><% end %>
+            <% if data[:importe].present? %><span>Importe: <strong>$<%= number_with_precision(data[:importe], precision: 2, delimiter: ',') %></strong></span><% end %>
+            <% if data[:fecha].present? %><span>Fecha: <strong><%= data[:fecha] %></strong></span><% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Step indicator %>
+    <div class="flex items-center justify-center gap-2 mb-4">
+      <div class="flex items-center gap-1">
+        <div class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+        <span class="text-xs text-emerald-700 font-medium">Ticket</span>
+      </div>
+      <div class="w-8 h-0.5 bg-emerald-300"></div>
+      <div class="flex items-center gap-1">
+        <div class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold">✓</div>
+        <span class="text-xs text-emerald-700 font-medium">RFC</span>
+      </div>
+      <div class="w-8 h-0.5 bg-emerald-300"></div>
+      <div class="flex items-center gap-1">
+        <div class="w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold" id="step3-indicator">3</div>
+        <span class="text-xs text-emerald-700 font-medium">Datos fiscales</span>
+      </div>
+      <div class="w-8 h-0.5 bg-gray-300" id="step4-connector"></div>
+      <div class="flex items-center gap-1">
+        <div class="w-8 h-8 bg-gray-300 text-gray-500 rounded-full flex items-center justify-center text-sm font-bold" id="step4-indicator">4</div>
+        <span class="text-xs text-gray-400 font-medium" id="step4-label">Facturar</span>
+      </div>
+    </div>
+
+    <%# Personal data form %>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-4">
+      <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+        <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+        </svg>
+        Completa tus datos fiscales
+      </h3>
+
+      <div class="space-y-4">
+        <%# RFC (pre-filled, validated on previous page) %>
+        <div>
+          <label for="rfc" class="block text-sm font-medium text-gray-700 mb-1">RFC *</label>
+          <div class="flex gap-2">
+            <input type="text" id="rfc" name="rfc"
+                   value="<%= @rfc %>"
+                   placeholder="XAXX010101000"
+                   maxlength="13"
+                   readonly
+                   class="flex-1 rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm font-mono uppercase text-gray-700">
+            <span class="inline-flex items-center px-3 py-2 text-xs font-medium text-emerald-700 bg-emerald-100 rounded-lg">✓ Validado</span>
+          </div>
+        </div>
+
+        <% unless @platform_key == :rfacil %>
+          <%# Razón social %>
+          <div>
+            <label for="razon_social" class="block text-sm font-medium text-gray-700 mb-1">Razón Social / Nombre *</label>
+            <input type="text" id="razon_social" name="razon_social"
+                   placeholder="Nombre o razón social como aparece en tu constancia del SAT"
+                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+            <p class="text-xs text-gray-400 mt-1">Debe coincidir exactamente con tu constancia de situación fiscal.</p>
+          </div>
+
+          <%# Régimen fiscal — SAT catalog %>
+          <div>
+            <label for="regimen" class="block text-sm font-medium text-gray-700 mb-1">Régimen Fiscal *</label>
+            <select id="regimen" name="regimen"
+                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+              <option value="">Selecciona tu régimen fiscal</option>
+              <% InvoicePlatformRegistry::REGIMEN_FISCAL_OPTIONS.each do |opt| %>
+                <option value="<%= opt[:value] %>"><%= opt[:label] %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <%# Uso CFDI — SAT catalog %>
+          <div>
+            <label for="uso_cfdi" class="block text-sm font-medium text-gray-700 mb-1">Uso del CFDI *</label>
+            <select id="uso_cfdi" name="uso_cfdi"
+                    class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+              <option value="">Selecciona el uso del CFDI</option>
+              <% InvoicePlatformRegistry::USO_CFDI_OPTIONS.each do |opt| %>
+                <option value="<%= opt[:value] %>" <%= ' selected' if opt[:value] == 'G03' %>><%= opt[:label] %></option>
+              <% end %>
+            </select>
+          </div>
+
+          <%# Código postal %>
+          <div>
+            <label for="codigo_postal" class="block text-sm font-medium text-gray-700 mb-1">Código Postal del domicilio fiscal *</label>
+            <input type="text" id="codigo_postal" name="codigo_postal"
+                   placeholder="Ej: 31000"
+                   maxlength="5"
+                   pattern="[0-9]{5}"
+                   class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm font-mono focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                   oninput="this.value = this.value.replace(/[^0-9]/g, '')">
+            <p class="text-xs text-gray-400 mt-1">5 dígitos, como aparece en tu constancia de situación fiscal.</p>
+          </div>
+        <% end %>
+
+        <%# Email %>
+        <div>
+          <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Correo electrónico *</label>
+          <input type="email" id="email" name="email"
+                 placeholder="tu@correo.com"
+                 class="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500">
+          <p class="text-xs text-gray-400 mt-1">Aquí recibirás tu factura (PDF y XML).</p>
+        </div>
+      </div>
+
+      <%# Generate invoice button %>
+      <button type="button" id="generate-btn" onclick="generateInvoice()"
+              class="mt-6 w-full bg-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+        <svg id="generate-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+        </svg>
+        <svg id="generate-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span id="generate-text">Generar factura</span>
+      </button>
+
+      <%# Result message %>
+      <div id="generate-result" class="hidden mt-3 p-3 rounded-lg text-sm"></div>
+    </div>
+
+    <%# Scan another %>
+    <div class="text-center mt-6">
+      <%= link_to new_invoice_path, class: "text-emerald-600 font-medium hover:text-emerald-700" do %>
+        📷 Escanear otro ticket
+      <% end %>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  var isRfacil = <%= @platform_key == :rfacil %>;
+
+  function generateInvoice() {
+    var rfc = document.getElementById('rfc').value.trim().toUpperCase();
+    var razonSocialEl = document.getElementById('razon_social');
+    var regimenEl = document.getElementById('regimen');
+    var usoCfdiEl = document.getElementById('uso_cfdi');
+    var codigoPostalEl = document.getElementById('codigo_postal');
+    var razonSocial = razonSocialEl ? razonSocialEl.value.trim() : '';
+    var regimen = regimenEl ? regimenEl.value : '';
+    var usoCfdi = usoCfdiEl ? usoCfdiEl.value : '';
+    var codigoPostal = codigoPostalEl ? codigoPostalEl.value.trim() : '';
+    var email = document.getElementById('email').value.trim();
+
+    // Validate required fields
+    var missing = [];
+    if (!rfc) missing.push('RFC');
+    if (!email) missing.push('Correo electrónico');
+    if (!isRfacil) {
+      if (!razonSocial) missing.push('Razón Social');
+      if (!regimen) missing.push('Régimen Fiscal');
+      if (!usoCfdi) missing.push('Uso del CFDI');
+      if (!codigoPostal || codigoPostal.length !== 5) missing.push('Código Postal (5 dígitos)');
+    }
+
+    if (missing.length > 0) {
+      showGenerateResult('error', 'Completa los campos obligatorios: ' + missing.join(', '));
+      return;
+    }
+
+    var btn = document.getElementById('generate-btn');
+    var icon = document.getElementById('generate-icon');
+    var spinner = document.getElementById('generate-spinner');
+    var text = document.getElementById('generate-text');
+
+    // Show loading state
+    btn.disabled = true;
+    btn.classList.add('opacity-75');
+    icon.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    text.textContent = 'Generando factura...';
+    document.getElementById('generate-result').classList.add('hidden');
+
+    fetch('<%= raw generate_invoice_invoice_path(id: "current") %>', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+      },
+      body: JSON.stringify({
+        rfc: rfc,
+        razon_social: razonSocial,
+        regimen: regimen,
+        uso_cfdi: usoCfdi,
+        codigo_postal: codigoPostal,
+        email: email
+      })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+      spinner.classList.add('hidden');
+      icon.classList.remove('hidden');
+
+      if (data.success) {
+        text.textContent = '✓ Factura generada';
+        btn.classList.remove('opacity-75');
+
+        // If there's a download page, redirect there
+        if (data.download_url) {
+          window.location.href = data.download_url;
+          return;
+        }
+
+        // Fallback: update step indicator inline
+        document.getElementById('step3-indicator').textContent = '✓';
+        document.getElementById('step4-connector').className = 'w-8 h-0.5 bg-emerald-300';
+        document.getElementById('step4-indicator').className = 'w-8 h-8 bg-emerald-600 text-white rounded-full flex items-center justify-center text-sm font-bold';
+        document.getElementById('step4-indicator').textContent = '✓';
+        document.getElementById('step4-label').className = 'text-xs text-emerald-700 font-medium';
+
+        showGenerateResult('success', data.message || 'Factura generada exitosamente.');
+      } else {
+        text.textContent = 'Generar factura';
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+
+        var errorMsg = data.error || 'Error al generar la factura.';
+        if (data.step) errorMsg += ' (paso: ' + data.step + ')';
+        showGenerateResult('error', errorMsg);
+      }
+    })
+    .catch(function(err) {
+      spinner.classList.add('hidden');
+      icon.classList.remove('hidden');
+      text.textContent = 'Generar factura';
+      btn.disabled = false;
+      btn.classList.remove('opacity-75');
+      showGenerateResult('error', 'Error de conexión. Intenta de nuevo.');
+    });
+  }
+
+  function showGenerateResult(type, message) {
+    var el = document.getElementById('generate-result');
+    el.classList.remove('hidden');
+    var classes = {
+      success: 'mt-3 p-3 rounded-lg text-sm bg-emerald-100 text-emerald-800',
+      error: 'mt-3 p-3 rounded-lg text-sm bg-red-100 text-red-800'
+    };
+    el.className = classes[type] || classes.error;
+    el.textContent = message;
+  }
+</script>

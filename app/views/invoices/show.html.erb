@@ -1,0 +1,364 @@
+<% content_for(:title) { "Facturar - #{@result[:business_name] || 'Resultado'}" } %>
+
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-2xl mx-auto px-4">
+
+    <%# Header %>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-4">
+      <div class="flex items-center justify-between mb-4">
+        <h1 class="text-2xl font-bold text-gray-800">🧾 Facturar</h1>
+        <%= link_to new_invoice_path, class: "text-emerald-600 text-sm font-medium hover:text-emerald-700" do %>
+          ← Nuevo ticket
+        <% end %>
+      </div>
+
+      <% if @result[:business_name].present? %>
+        <div class="flex items-center gap-3 mb-2">
+          <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
+            </svg>
+          </div>
+          <div>
+            <h2 class="text-xl font-semibold text-gray-700"><%= @result[:business_name] %></h2>
+            <% if @result[:platform_name].present? %>
+              <p class="text-xs text-gray-400">Plataforma: <%= @result[:platform_name] %></p>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Invoice data %>
+    <% data = @result[:invoice_data] || {} %>
+    <% if data.values.any?(&:present?) %>
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-4">
+        <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+          <svg class="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+          </svg>
+          Datos del ticket
+        </h3>
+
+        <div class="space-y-3">
+          <% field_labels = {
+            serie: "Serie",
+            folio: "Folio / Ticket",
+            importe: "Importe",
+            fecha: "Fecha",
+            rfc: "RFC del negocio",
+            razon_social: "Razón Social",
+            sucursal: "Sucursal",
+            forma_pago: "Forma de pago",
+            web_id: "Web ID"
+          } %>
+
+          <% field_labels.each do |key, label| %>
+            <% next unless data[key].present? %>
+            <div class="flex justify-between items-center py-2 border-b border-gray-100">
+              <span class="text-gray-500 text-sm"><%= label %></span>
+              <div class="flex items-center gap-2">
+                <% display_value = key == :importe ? "$#{number_with_precision(data[key], precision: 2, delimiter: ',')}" : data[key].to_s %>
+                <span class="font-mono font-semibold text-gray-800"><%= display_value %></span>
+                <button onclick="navigator.clipboard.writeText('<%= j data[key].to_s %>').then(() => { this.textContent = '✓'; setTimeout(() => { this.textContent = '📋'; }, 1500); })"
+                        class="text-gray-400 hover:text-gray-600 cursor-pointer text-xs">📋</button>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <%# Copy all data %>
+        <% copy_lines = field_labels.map { |k, l| data[k].present? ? "#{l}: #{data[k]}" : nil }.compact %>
+        <% copy_lines << "URL: #{@result[:invoice_url]}" if @result[:invoice_url].present? %>
+        <% copy_text = copy_lines.join("\n") %>
+
+        <button onclick="navigator.clipboard.writeText(`<%= j copy_text %>`).then(() => { this.querySelector('span').textContent = '✓ Datos copiados'; setTimeout(() => { this.querySelector('span').textContent = 'Copiar todos los datos'; }, 2000); })"
+                class="mt-4 w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg font-medium hover:bg-gray-200 transition-colors text-center text-sm cursor-pointer flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path>
+          </svg>
+          <span>Copiar todos los datos</span>
+        </button>
+      </div>
+    <% end %>
+
+    <%# QR Code detected %>
+    <% if @result[:qr_detected] %>
+      <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+        <div class="flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"></path>
+          </svg>
+          <p class="text-blue-700 text-sm">
+            <% if @result[:invoice_url].blank? %>
+              Se detectó un código QR para facturación. Escanéalo con la cámara de tu teléfono.
+            <% else %>
+              También puedes escanear el código QR del ticket con tu teléfono.
+            <% end %>
+          </p>
+        </div>
+      </div>
+    <% end %>
+
+    <%# ═══════════════════════════════════════════════════════════════════ %>
+    <%# RFC INPUT + VERIFY — Main CTA section                            %>
+    <%# ═══════════════════════════════════════════════════════════════════ %>
+    <% if @result[:invoice_url].present? && @result[:platform].present? %>
+      <div class="bg-emerald-50 border border-emerald-200 rounded-xl shadow-lg p-6 mb-4">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+          </svg>
+          <h3 class="text-lg font-semibold text-emerald-800">Ingresa tu RFC para facturar</h3>
+        </div>
+
+        <p class="text-emerald-700 text-sm mb-4">
+          Ingresa el RFC al que deseas facturar. Validaremos el formato y luego verificaremos los datos del ticket con el servidor de facturación.
+        </p>
+
+        <%# RFC field with SAT validation %>
+        <div class="mb-4">
+          <label for="rfc-input" class="block text-sm font-medium text-emerald-800 mb-1">RFC del receptor *</label>
+          <input type="text" id="rfc-input"
+                 placeholder="Ej: XAXX010101000"
+                 maxlength="13"
+                 autocomplete="off"
+                 class="w-full rounded-lg border border-emerald-300 px-3 py-2 text-sm font-mono uppercase focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white"
+                 oninput="this.value = this.value.toUpperCase(); validateRFC();">
+          <div id="rfc-validation" class="mt-1 text-xs hidden"></div>
+          <p class="text-xs text-emerald-600 mt-1">RFC de 12 caracteres (persona moral) o 13 caracteres (persona física) según el SAT.</p>
+        </div>
+
+        <%# Forma de pago (only for platforms that need it, like US Fuel) %>
+        <% platform_config = InvoicePlatformRegistry.config_for(@result[:platform].to_sym) %>
+        <% if platform_config&.dig(:needs_forma_pago) %>
+          <div class="mb-4">
+            <label for="forma-pago-input" class="block text-sm font-medium text-emerald-800 mb-1">Forma de pago *</label>
+            <select id="forma-pago-input"
+                    class="w-full rounded-lg border border-emerald-300 px-3 py-2 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+              <option value="">Selecciona la forma de pago</option>
+              <% InvoicePlatformRegistry::FORMA_PAGO_OPTIONS.each do |opt| %>
+                <option value="<%= opt[:value] %>"
+                  <%= ' selected' if data[:forma_pago].to_s.downcase.include?(opt[:label].downcase.split(' ').last) %>
+                ><%= opt[:label] %></option>
+              <% end %>
+            </select>
+          </div>
+        <% end %>
+
+        <%# Verify button — disabled until RFC is valid %>
+        <button id="verify-btn"
+                onclick="verifyTicket()"
+                disabled
+                class="w-full bg-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-center flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+          <svg id="verify-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <svg id="verify-spinner" class="hidden animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <span id="verify-text">Facturar ticket</span>
+        </button>
+
+        <%# Result message %>
+        <div id="verify-result" class="hidden mt-3 p-3 rounded-lg text-sm"></div>
+
+        <%# Fallback: open directly %>
+        <div class="mt-3 text-center">
+          <a href="<%= @result[:invoice_url] %>"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="text-emerald-600 text-xs hover:text-emerald-700 underline">
+            Abrir sitio de facturación directamente →
+          </a>
+        </div>
+      </div>
+
+    <%# No platform detected — simple link %>
+    <% elsif @result[:invoice_url].present? %>
+      <div class="bg-emerald-50 border border-emerald-200 rounded-xl shadow-lg p-6 mb-4">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-6 h-6 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"></path>
+          </svg>
+          <h3 class="text-lg font-semibold text-emerald-800">Link de facturación</h3>
+        </div>
+        <p class="text-emerald-700 text-sm mb-4 break-all font-mono bg-white rounded-lg p-3 border border-emerald-200">
+          <%= @result[:invoice_url] %>
+        </p>
+        <a href="<%= @result[:invoice_url] %>"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="w-full bg-emerald-600 text-white py-3 px-6 rounded-xl font-semibold hover:bg-emerald-700 transition-colors text-center flex items-center justify-center gap-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+          </svg>
+          Ir a facturar
+        </a>
+      </div>
+    <% end %>
+
+    <%# No results %>
+    <% if @result[:invoice_url].blank? && !@result[:qr_detected] && (data.blank? || data.values.none?(&:present?)) %>
+      <div class="bg-yellow-50 border border-yellow-200 rounded-xl shadow-lg p-6 mb-4">
+        <div class="flex items-center gap-2 mb-3">
+          <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
+          </svg>
+          <h3 class="text-lg font-semibold text-yellow-800">No se encontró información</h3>
+        </div>
+        <p class="text-yellow-700 text-sm">No pudimos detectar datos de facturación en este ticket. Prueba con una foto más clara o incluye la parte inferior del ticket.</p>
+      </div>
+    <% end %>
+
+    <%# Scan another %>
+    <div class="text-center mt-6">
+      <%= link_to new_invoice_path, class: "text-emerald-600 font-medium hover:text-emerald-700" do %>
+        📷 Escanear otro ticket
+      <% end %>
+    </div>
+
+  </div>
+</div>
+
+<%# ═══════════════════════════════════════════════════════════════════ %>
+<%# JavaScript: RFC validation + ticket verification                  %>
+<%# ═══════════════════════════════════════════════════════════════════ %>
+<% if @result[:platform].present? && @result[:invoice_url].present? %>
+<script>
+  // SAT RFC regex (CFDI 4.0)
+  var RFC_REGEX = /^[A-Z&Ñ]{3,4}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[A-Z0-9]{2}[0-9A]$/;
+  var RFC_MORAL_REGEX = /^[A-ZÑ&]{3}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[A-Z0-9]{3}$/;
+  var RFC_FISICA_REGEX = /^[A-ZÑ&]{4}[0-9]{2}(0[1-9]|1[0-2])(0[1-9]|[12][0-9]|3[01])[A-Z0-9]{3}$/;
+
+  var rfcValid = false;
+
+  function validateRFC() {
+    var input = document.getElementById('rfc-input');
+    var validation = document.getElementById('rfc-validation');
+    var btn = document.getElementById('verify-btn');
+    var rfc = input.value.trim().toUpperCase();
+
+    if (rfc.length === 0) {
+      validation.classList.add('hidden');
+      rfcValid = false;
+      btn.disabled = true;
+      input.classList.remove('border-red-400', 'border-emerald-400');
+      input.classList.add('border-emerald-300');
+      return;
+    }
+
+    validation.classList.remove('hidden');
+
+    if (rfc.length < 12) {
+      validation.className = 'mt-1 text-xs text-gray-400';
+      validation.textContent = rfc.length + ' de 12-13 caracteres...';
+      rfcValid = false;
+      btn.disabled = true;
+      input.classList.remove('border-red-400', 'border-emerald-400');
+      input.classList.add('border-emerald-300');
+      return;
+    }
+
+    if (RFC_REGEX.test(rfc)) {
+      var type = RFC_MORAL_REGEX.test(rfc) ? 'Persona Moral' : 'Persona Física';
+      if (rfc === 'XAXX010101000') type = 'Público en General';
+      validation.className = 'mt-1 text-xs text-emerald-700 font-medium';
+      validation.textContent = '✓ RFC válido (' + type + ')';
+      rfcValid = true;
+      btn.disabled = false;
+      input.classList.remove('border-red-400', 'border-emerald-300');
+      input.classList.add('border-emerald-400');
+    } else {
+      validation.className = 'mt-1 text-xs text-red-600';
+      validation.textContent = '✗ RFC no válido. Verifica el formato según el SAT.';
+      rfcValid = false;
+      btn.disabled = true;
+      input.classList.remove('border-emerald-400', 'border-emerald-300');
+      input.classList.add('border-red-400');
+    }
+  }
+
+  function verifyTicket() {
+    if (!rfcValid) return;
+
+    var rfc = document.getElementById('rfc-input').value.trim().toUpperCase();
+    var formaPagoEl = document.getElementById('forma-pago-input');
+    var formaPago = formaPagoEl ? formaPagoEl.value : '';
+
+    <% if InvoicePlatformRegistry.config_for(@result[:platform].to_sym)&.dig(:needs_forma_pago) %>
+    if (!formaPago) {
+      showVerifyResult('error', 'Selecciona la forma de pago.');
+      return;
+    }
+    <% end %>
+
+    var btn = document.getElementById('verify-btn');
+    var icon = document.getElementById('verify-icon');
+    var spinner = document.getElementById('verify-spinner');
+    var text = document.getElementById('verify-text');
+
+    // Show loading state
+    btn.disabled = true;
+    btn.classList.add('opacity-75');
+    icon.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    text.textContent = 'Verificando con el servidor...';
+    document.getElementById('verify-result').classList.add('hidden');
+
+    // Call our Rails server (which proxies to the invoice platform)
+    fetch('<%= raw verify_invoice_path(id: "current") %>', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': document.querySelector('meta[name="csrf-token"]')?.content || ''
+      },
+      body: JSON.stringify({ rfc: rfc, forma_pago: formaPago })
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+      spinner.classList.add('hidden');
+      icon.classList.remove('hidden');
+
+      if (data.success) {
+        // Ticket validated! Redirect to personal data form
+        text.textContent = '✓ Ticket válido — cargando datos fiscales...';
+        btn.classList.remove('opacity-75');
+        showVerifyResult('success', 'Los datos del ticket son correctos. Redirigiendo a datos fiscales...');
+
+        // Redirect to datos fiscales form
+        setTimeout(function() {
+          window.location.href = '<%= raw datos_fiscales_invoice_path(id: "current") %>';
+        }, 800);
+      } else {
+        // Validation failed
+        text.textContent = 'Facturar ticket';
+        btn.disabled = false;
+        btn.classList.remove('opacity-75');
+        showVerifyResult('error', data.error || 'Los datos del ticket no son válidos. Verifica que la foto sea clara.');
+      }
+    })
+    .catch(function(err) {
+      spinner.classList.add('hidden');
+      icon.classList.remove('hidden');
+      text.textContent = 'Facturar ticket';
+      btn.disabled = false;
+      btn.classList.remove('opacity-75');
+      showVerifyResult('warning', 'Error de conexión. Intenta de nuevo.');
+    });
+  }
+
+  function showVerifyResult(type, message) {
+    var result = document.getElementById('verify-result');
+    result.classList.remove('hidden');
+    var classes = {
+      success: 'mt-3 p-3 rounded-lg text-sm bg-emerald-100 text-emerald-800',
+      error: 'mt-3 p-3 rounded-lg text-sm bg-red-100 text-red-800',
+      warning: 'mt-3 p-3 rounded-lg text-sm bg-yellow-100 text-yellow-800'
+    };
+    result.className = classes[type] || classes.error;
+    result.textContent = message;
+  }
+</script>
+<% end %>

@@ -1,0 +1,232 @@
+<% content_for(:title) { "Dividir Cuenta - Manual" } %>
+
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-2xl mx-auto px-4 space-y-4">
+
+    <!-- Header -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <h1 class="text-2xl font-bold text-gray-800 mb-1">📖 Como usar Dividir Cuenta</h1>
+      <p class="text-gray-500 text-sm">Divide la cuenta del restaurante en segundos</p>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center shrink-0">
+          <span class="text-white font-bold text-sm">1</span>
+        </div>
+        <h2 class="text-base font-bold text-gray-800">Sube tu ticket</h2>
+      </div>
+      <p class="text-gray-600 text-sm mb-2">
+        Ve a <strong>Nuevo Ticket</strong> y sube una foto del ticket de tu restaurante.
+        Puedes tocar para seleccionar de tu galería o arrastrar y soltar la imagen.
+      </p>
+      <div class="bg-indigo-50 rounded-lg p-2.5">
+        <p class="text-xs text-indigo-700">
+          <strong>💡 Tip:</strong> Asegúrate de que la foto sea clara y se vean bien los precios.
+          Formatos: PNG, JPG, GIF (hasta 4MB).
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center shrink-0">
+          <span class="text-white font-bold text-sm">2</span>
+        </div>
+        <h2 class="text-base font-bold text-gray-800">Verifica los artículos</h2>
+      </div>
+      <p class="text-gray-600 text-sm mb-2">
+        La app lee automáticamente el ticket usando inteligencia artificial y extrae todos los artículos con sus precios.
+      </p>
+      <div class="bg-green-50 rounded-lg p-2.5 mb-2">
+        <p class="text-xs text-green-700">
+          <strong>✅ Totales coinciden:</strong> Los artículos suman igual al total del ticket.
+        </p>
+      </div>
+      <div class="bg-yellow-50 rounded-lg p-2.5">
+        <p class="text-xs text-yellow-700">
+          <strong>⚠️ Diferencia:</strong> Hay una diferencia entre el total y la suma. Verifica los precios.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center shrink-0">
+          <span class="text-white font-bold text-sm">3</span>
+        </div>
+        <h2 class="text-base font-bold text-gray-800">Agrega personas</h2>
+      </div>
+      <p class="text-gray-600 text-sm mb-2">
+        Por defecto se crean <strong>Yo</strong> y <strong>Persona 1</strong>.
+      </p>
+      <ul class="space-y-1 text-gray-600 text-xs">
+        <li><strong>+ Agregar</strong> — añade más personas</li>
+        <li><strong>Doble toque</strong> — edita el nombre</li>
+        <li><strong>✕</strong> — elimina una persona</li>
+      </ul>
+    </div>
+
+    <!-- Step 4 -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center shrink-0">
+          <span class="text-white font-bold text-sm">4</span>
+        </div>
+        <h2 class="text-base font-bold text-gray-800">Asigna artículos</h2>
+      </div>
+      <p class="text-gray-600 text-sm mb-2">
+        Selecciona una persona y luego toca los artículos que consumió.
+      </p>
+      <div class="bg-indigo-50 rounded-lg p-2.5 mb-2">
+        <p class="text-xs text-indigo-700">
+          <strong>💡 Restante:</strong> Tócalo para asignar todos los artículos sin dueño a la persona seleccionada.
+        </p>
+      </div>
+      <p class="text-xs font-medium text-gray-700 mb-1">Dividir un artículo (ícono ⇄):</p>
+      <ul class="space-y-0.5 text-gray-600 text-xs pl-3">
+        <li>• Entre todos — partes iguales</li>
+        <li>• En 2 — crea 2 filas</li>
+        <li>• En N partes — elige cuántas</li>
+      </ul>
+    </div>
+
+    <!-- Step 5: Dividir total -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center shrink-0">
+          <span class="text-white font-bold text-sm">5</span>
+        </div>
+        <h2 class="text-base font-bold text-gray-800">¿No quieres asignar uno por uno? Divide el total</h2>
+      </div>
+      <p class="text-gray-600 text-sm mb-2">
+        Toca el botón <strong>÷ Dividir total entre N personas</strong> (aparece debajo de la lista de personas).
+        Te preguntará entre cuántas personas dividir; por defecto sugiere el número de personas que ya agregaste,
+        pero puedes escribir otro número.
+      </p>
+      <ul class="space-y-1 text-gray-600 text-xs mb-2">
+        <li>• Si pones <strong>el mismo número</strong> de personas, cada persona recibe una parte igual.</li>
+        <li>• Si pones <strong>más</strong>, las personas faltantes aparecen agrupadas como “Otros (N)”.</li>
+        <li>• Toca el botón otra vez (cuando esté en azul) para <strong>cancelar</strong> y volver al modo por artículo.</li>
+      </ul>
+      <div class="bg-indigo-50 rounded-lg p-2.5">
+        <p class="text-xs text-indigo-700">
+          <strong>💡 Tip:</strong> En este modo se ignoran las asignaciones por artículo y la propina se reparte por igual.
+        </p>
+      </div>
+    </div>
+
+    <!-- Step 6 -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 bg-indigo-500 rounded-full flex items-center justify-center shrink-0">
+          <span class="text-white font-bold text-sm">6</span>
+        </div>
+        <h2 class="text-base font-bold text-gray-800">Ajusta la propina</h2>
+      </div>
+      <p class="text-gray-600 text-sm">
+        Elige un porcentaje (0%, 5%, 10%, 15%) o escribe uno personalizado. Se distribuye según lo que consumió cada persona.
+      </p>
+    </div>
+
+    <!-- Step 7 -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center shrink-0">
+          <span class="text-white font-bold text-sm">7</span>
+        </div>
+        <h2 class="text-base font-bold text-gray-800">Comparte el resumen</h2>
+      </div>
+      <p class="text-gray-600 text-sm mb-2">
+        Usa los botones para copiar:
+      </p>
+      <div class="flex gap-2 mb-2">
+        <div class="flex items-center gap-1 px-2 py-1 bg-indigo-500 text-white rounded-lg text-xs font-medium">
+          📋 Detalle
+        </div>
+        <div class="flex items-center gap-1 px-2 py-1 bg-green-500 text-white rounded-lg text-xs font-medium">
+          📋 Resumen
+        </div>
+      </div>
+      <ul class="space-y-0.5 text-gray-600 text-xs">
+        <li>• <strong>Detalle</strong> — desglose con artículos por persona</li>
+        <li>• <strong>Resumen</strong> — solo el total por persona</li>
+      </ul>
+      <div class="bg-gray-50 rounded-lg p-2.5 mt-2 overflow-x-auto">
+        <p class="text-xs text-gray-600 font-medium">📱 Ejemplo:</p>
+        <pre class="text-[10px] text-gray-500 mt-1 font-mono whitespace-pre-wrap">🧾 Dividir Cuenta - Il Fornaio
+👤 Antonio: $450 + $45 propina = $495
+👤 Maria: $360 + $36 propina = $396
+💰 Total: $810 + $81 propina = $891</pre>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <h2 class="text-base font-bold text-gray-800 mb-3">❓ Preguntas frecuentes</h2>
+      <div class="space-y-3">
+        <details class="group">
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <span class="font-medium text-gray-700 text-sm">¿Qué pasa si el ticket no se lee bien?</span>
+            <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180 shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <p class="mt-1.5 text-xs text-gray-600">
+            Intenta tomar una foto más clara, con buena iluminación y sin sombras sobre el ticket.
+          </p>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <span class="font-medium text-gray-700 text-sm">¿Puedo editar los precios?</span>
+            <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180 shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <p class="mt-1.5 text-xs text-gray-600">
+            Por el momento no. Si hay un error, intenta subir el ticket nuevamente con una mejor foto.
+          </p>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <span class="font-medium text-gray-700 text-sm">¿Se guarda mi información?</span>
+            <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180 shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <p class="mt-1.5 text-xs text-gray-600">
+            No. La imagen se procesa y se descarta. Los datos solo existen en tu sesión del navegador.
+          </p>
+        </details>
+
+        <details class="group">
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <span class="font-medium text-gray-700 text-sm">¿Funciona con cualquier ticket?</span>
+            <svg class="w-4 h-4 text-gray-400 transition-transform group-open:rotate-180 shrink-0 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </summary>
+          <p class="mt-1.5 text-xs text-gray-600">
+            Funciona mejor con tickets de restaurantes mexicanos. También soporta supermercados como Alsuper.
+          </p>
+        </details>
+      </div>
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center pb-8">
+      <%= link_to new_split_check_url, class: "inline-flex items-center gap-2 bg-indigo-600 text-white py-2.5 px-6 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors", data: { action: "click->split-check-nav#clearSplitData" } do %>
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+        </svg>
+        Dividir una cuenta ahora
+      <% end %>
+    </div>
+
+  </div>
+</div>

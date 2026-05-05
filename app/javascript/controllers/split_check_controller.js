@@ -3,6 +3,7 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "peopleContainer",
+    "equalSplitContainer",
     "itemsContainer",
     "splitSummary",
     "tipInput",
@@ -14,7 +15,9 @@ export default class extends Controller {
     "divideModal",
     "divideItemName",
     "divideItemPrice",
-    "divideNInput"
+    "divideNInput",
+    "equalSplitModal",
+    "equalSplitInput"
   ]
 
   static values = {
@@ -43,6 +46,11 @@ export default class extends Controller {
     this.editingPersonId = null
     this.lastTapTime = {}
     this.doubleTapDelay = 300
+
+    // Equal-split mode (divide receipt total equally among N people).
+    // equalSplitCount is the user-chosen divisor; null means "fall back to people.length".
+    this.equalSplitMode = false
+    this.equalSplitCount = null
 
     // Item dividing
     this.dividingItemRow = null
@@ -119,7 +127,9 @@ export default class extends Controller {
       nextPersonId: this.nextPersonId,
       assignments: assignments,
       dividedItems: dividedItems,
-      tipPercentage: this.tipInputTarget.value
+      tipPercentage: this.tipInputTarget.value,
+      equalSplitMode: this.equalSplitMode,
+      equalSplitCount: this.equalSplitCount
     }
 
     try {
@@ -158,6 +168,17 @@ export default class extends Controller {
       // Restore tip percentage
       if (state.tipPercentage !== undefined) {
         this.tipInputTarget.value = state.tipPercentage
+      }
+
+      // Restore equal-split mode
+      if (state.equalSplitMode !== undefined) {
+        this.equalSplitMode = !!state.equalSplitMode
+      }
+
+      // Restore equal-split divisor count (null falls back to people.length)
+      if (state.equalSplitCount !== undefined && state.equalSplitCount !== null) {
+        const n = parseInt(state.equalSplitCount, 10)
+        this.equalSplitCount = Number.isFinite(n) && n > 0 ? n : null
       }
 
       // Restore divided items FIRST (before assignments)
@@ -327,6 +348,130 @@ export default class extends Controller {
     return total
   }
 
+  // Sum of every line in the receipt (divided headers contribute 0 by design)
+  getReceiptTotal() {
+    let total = 0
+    this.itemsContainerTarget.querySelectorAll('[data-item-id]').forEach(row => {
+      total += parseFloat(row.dataset.price) || 0
+    })
+    return total
+  }
+
+  // Effective divisor for equal-split mode: user-chosen count, otherwise people.length.
+  getEqualSplitCount() {
+    const n = parseInt(this.equalSplitCount, 10)
+    if (Number.isFinite(n) && n > 0) return n
+    return this.people.length
+  }
+
+  // Returns the subtotal for a person, honoring equalSplitMode
+  getPersonSubtotal(personId) {
+    if (this.equalSplitMode) {
+      const count = this.getEqualSplitCount()
+      if (count > 0) return this.getReceiptTotal() / count
+    }
+    return this.getPersonTotal(personId)
+  }
+
+  toggleEqualSplit() {
+    if (this.equalSplitMode) {
+      // Currently ON → just turn off, no modal
+      this.equalSplitMode = false
+      this.equalSplitCount = null
+      this.renderPeople()
+      this.renderEqualSplitButton()
+      this.updateSplitSummary()
+    } else {
+      // Currently OFF → open modal to ask for count, default = people.length.
+      // We use a modal (not window.prompt) because Hotwire Native WebViews
+      // do not surface JS prompt() dialogs by default.
+      this.openEqualSplitModal()
+    }
+  }
+
+  openEqualSplitModal() {
+    if (!this.hasEqualSplitModalTarget) {
+      // Fallback for legacy markup without the modal: use prompt and hope for the best.
+      const defaultCount = Math.max(1, this.people.length)
+      const answer = window.prompt('¿Entre cuántas personas dividir el total?', String(defaultCount))
+      if (answer === null) return
+      const n = parseInt(answer, 10)
+      if (!Number.isFinite(n) || n <= 0) return
+      this.applyEqualSplit(n)
+      return
+    }
+
+    const defaultCount = Math.max(1, this.equalSplitCount || this.people.length)
+    this.equalSplitInputTarget.value = String(defaultCount)
+    this.equalSplitModalTarget.classList.remove('hidden')
+    this.equalSplitModalTarget.classList.add('flex')
+    // Focus + select after the modal is visible so the keyboard appears on mobile.
+    setTimeout(() => {
+      try {
+        this.equalSplitInputTarget.focus()
+        this.equalSplitInputTarget.select()
+      } catch (e) {}
+    }, 50)
+  }
+
+  closeEqualSplitModal() {
+    if (!this.hasEqualSplitModalTarget) return
+    this.equalSplitModalTarget.classList.add('hidden')
+    this.equalSplitModalTarget.classList.remove('flex')
+  }
+
+  closeEqualSplitModalOnOutsideClick(e) {
+    if (e.target === this.equalSplitModalTarget) {
+      this.closeEqualSplitModal()
+    }
+  }
+
+  confirmEqualSplit(e) {
+    if (e && typeof e.preventDefault === 'function') e.preventDefault()
+    const raw = this.equalSplitInputTarget.value
+    const n = parseInt(raw, 10)
+    if (!Number.isFinite(n) || n <= 0) {
+      // Bad input — flash the input border red briefly, don't close
+      this.equalSplitInputTarget.classList.add('border-red-500', 'ring-2', 'ring-red-300')
+      setTimeout(() => {
+        this.equalSplitInputTarget.classList.remove('border-red-500', 'ring-2', 'ring-red-300')
+      }, 1200)
+      return
+    }
+    this.applyEqualSplit(n)
+    this.closeEqualSplitModal()
+  }
+
+  applyEqualSplit(n) {
+    // Pad the people list so it matches the chosen divisor.
+    // Names follow the existing default ("Persona N", numbered by position),
+    // and we skip any number already used in the current list so we don't
+    // duplicate a name the user has set manually.
+    while (this.people.length < n) {
+      const usedNames = new Set(this.people.map(p => p.name.toLowerCase()))
+      let suffix = this.people.length + 1
+      let name = `Persona ${suffix}`
+      while (usedNames.has(name.toLowerCase())) {
+        suffix++
+        name = `Persona ${suffix}`
+      }
+      const colorIndex = this.getNextAvailableColorIndex()
+      const newPersonId = this.nextPersonId
+      this.nextPersonId++
+      this.people.push({ id: newPersonId, name, colorIndex })
+    }
+
+    // If the user picked fewer than the existing people, we never silently
+    // remove rows the user created — clamp the divisor up to people.length
+    // instead so each named row gets a real share.
+    this.equalSplitMode = true
+    this.equalSplitCount = Math.max(n, this.people.length)
+    this.renderPeople()
+    this.renderEqualSplitButton()
+    this.updateSplitSummary()
+    this.saveState()
+  }
+
   getTipPercentage() {
     const value = parseFloat(this.tipInputTarget.value) || 0
     return Math.max(0, Math.min(100, value)) / 100
@@ -366,7 +511,7 @@ export default class extends Controller {
       const color = this.colors[person.colorIndex % this.colors.length]
       const isSelected = person.id === this.selectedPersonId
       const canDelete = this.people.length > 1
-      const personSubtotal = this.getPersonTotal(person.id)
+      const personSubtotal = this.getPersonSubtotal(person.id)
       const personTip = personSubtotal * tipPercent
       const personTotal = personSubtotal + personTip
 
@@ -426,8 +571,12 @@ export default class extends Controller {
     addBtn.addEventListener('click', () => this.addPerson())
     this.peopleContainerTarget.appendChild(addBtn)
 
-    // Add "Sin asignar" button if there are unassigned items
-    const unassignedTotal = this.getUnassignedTotal()
+    // The "Dividir total" button now lives on its own row (equalSplitContainer),
+    // rendered separately so it doesn't get mistaken for another person.
+    this.renderEqualSplitButton()
+
+    // Add "Sin asignar" button if there are unassigned items (hidden while equal-split mode is on)
+    const unassignedTotal = this.equalSplitMode ? 0 : this.getUnassignedTotal()
     if (unassignedTotal > 0) {
       const unassignedBtn = document.createElement('button')
       unassignedBtn.className = 'flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium bg-gray-200 text-gray-500 border border-gray-300 hover:bg-gray-300 hover:border-gray-400 transition-all cursor-pointer'
@@ -441,6 +590,41 @@ export default class extends Controller {
       unassignedBtn.addEventListener('click', () => this.assignUnassignedToNewPerson())
       this.peopleContainerTarget.appendChild(unassignedBtn)
     }
+  }
+
+  // Renders the "Dividir total" button on its own row so it doesn't look
+  // like just another person pill. Uses equalSplitContainer when available
+  // and gracefully falls back to peopleContainer for older markup.
+  renderEqualSplitButton() {
+    const target = this.hasEqualSplitContainerTarget
+      ? this.equalSplitContainerTarget
+      : this.peopleContainerTarget
+
+    if (this.hasEqualSplitContainerTarget) {
+      target.innerHTML = ''
+    }
+
+    const wrapper = document.createElement('div')
+    wrapper.className = 'flex items-center gap-2 w-full'
+
+    const equalBtn = document.createElement('button')
+    equalBtn.type = 'button'
+    equalBtn.className = `flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all w-full ${
+      this.equalSplitMode
+        ? 'bg-indigo-600 text-white shadow-md hover:bg-indigo-700'
+        : 'bg-white text-indigo-600 border-2 border-dashed border-indigo-300 hover:border-indigo-500 hover:bg-indigo-50'
+    }`
+    equalBtn.title = 'Dividir el total del ticket entre N personas por igual'
+
+    const count = this.getEqualSplitCount()
+    const label = this.equalSplitMode
+      ? `÷ Dividiendo entre ${count} ${count === 1 ? 'persona' : 'personas'} (toca para cancelar)`
+      : '÷ Dividir total entre N personas'
+    equalBtn.innerHTML = `<span>${label}</span>`
+    equalBtn.addEventListener('click', () => this.toggleEqualSplit())
+
+    wrapper.appendChild(equalBtn)
+    target.appendChild(wrapper)
   }
 
   assignUnassignedToNewPerson() {
@@ -916,26 +1100,43 @@ export default class extends Controller {
       totals[String(p.id)] = 0
     })
 
-    // Calculate totals from all items including dynamically created divided sub-items
-    rows.forEach(row => {
-      const assignedTo = row.dataset.assignedTo
-      const price = parseFloat(row.dataset.price) || 0
+    if (this.equalSplitMode && this.getEqualSplitCount() > 0) {
+      const equalShare = this.getReceiptTotal() / this.getEqualSplitCount()
+      this.people.forEach(p => {
+        totals[String(p.id)] = equalShare
+      })
+    } else {
+      // Calculate totals from all items including dynamically created divided sub-items
+      rows.forEach(row => {
+        const assignedTo = row.dataset.assignedTo
+        const price = parseFloat(row.dataset.price) || 0
 
-      if (assignedTo && assignedTo in totals) {
-        totals[assignedTo] += price
-      }
-    })
+        if (assignedTo && assignedTo in totals) {
+          totals[assignedTo] += price
+        }
+      })
+    }
 
-    // Calculate unassigned
+    // Calculate unassigned (suppressed in equal-split mode)
     let unassignedTotal = 0
-    rows.forEach(row => {
-      if (!row.dataset.assignedTo) {
-        unassignedTotal += parseFloat(row.dataset.price) || 0
-      }
-    })
+    if (!this.equalSplitMode) {
+      rows.forEach(row => {
+        if (!row.dataset.assignedTo) {
+          unassignedTotal += parseFloat(row.dataset.price) || 0
+        }
+      })
+    }
 
     // Render summary
     this.splitSummaryTarget.innerHTML = ''
+
+    if (this.equalSplitMode) {
+      const count = this.getEqualSplitCount()
+      const banner = document.createElement('div')
+      banner.className = 'flex items-center gap-2 p-3 rounded-lg bg-indigo-50 border border-indigo-200 text-indigo-700 text-sm font-medium'
+      banner.innerHTML = `<span>÷</span><span>Dividiendo el total entre ${count} ${count === 1 ? 'persona' : 'personas'} por igual</span>`
+      this.splitSummaryTarget.appendChild(banner)
+    }
 
     this.people.forEach(person => {
       const color = this.colors[person.colorIndex % this.colors.length]
@@ -958,6 +1159,34 @@ export default class extends Controller {
       `
       this.splitSummaryTarget.appendChild(div)
     })
+
+    // In equal-split mode, if the user-chosen divisor is bigger than the named
+    // people list, show a single grouped row for the missing shares so the
+    // visible totals still reconcile to the receipt total.
+    if (this.equalSplitMode) {
+      const count = this.getEqualSplitCount()
+      const missing = count - this.people.length
+      if (missing > 0 && count > 0) {
+        const equalShare = this.getReceiptTotal() / count
+        const subtotal = equalShare * missing
+        const tip = subtotal * tipPercent
+        const total = subtotal + tip
+        const div = document.createElement('div')
+        div.className = 'flex items-center justify-between p-4 rounded-lg bg-gray-50 border-l-4 border-gray-300'
+        div.innerHTML = `
+          <div class="flex items-center gap-3">
+            <span class="w-4 h-4 rounded-full bg-gray-300"></span>
+            <span class="font-medium text-gray-600">Otros (${missing})</span>
+          </div>
+          <div class="text-right">
+            <p class="text-sm text-gray-500">Subtotal: $${subtotal.toFixed(2)}</p>
+            ${tipPercent > 0 ? `<p class="text-sm text-gray-500">Propina (${(tipPercent * 100).toFixed(0)}%): $${tip.toFixed(2)}</p>` : ''}
+            <p class="font-bold text-gray-600 text-lg">$${total.toFixed(2)}</p>
+          </div>
+        `
+        this.splitSummaryTarget.appendChild(div)
+      }
+    }
 
     // Show unassigned if any (no tip applied to unassigned items)
     if (unassignedTotal > 0) {
@@ -986,6 +1215,11 @@ export default class extends Controller {
 
   // Detailed WhatsApp Text Generation (with items per person)
   generateDetailedWhatsAppText() {
+    if (this.equalSplitMode) {
+      // No per-item breakdown when splitting equally — fall back to the simple summary
+      return this.generateWhatsAppText()
+    }
+
     const tipPercent = this.getTipPercentage()
     const rows = Array.from(this.itemsContainerTarget.querySelectorAll('[data-item-id]'))
 
@@ -1068,14 +1302,19 @@ export default class extends Controller {
     // Initialize totals for all people (use string keys for consistency with dataset)
     this.people.forEach(p => { totals[String(p.id)] = 0 })
 
-    // Calculate totals from all items including dynamically created divided sub-items
-    this.itemsContainerTarget.querySelectorAll('[data-item-id]').forEach(row => {
-      const assignedTo = row.dataset.assignedTo
-      const price = parseFloat(row.dataset.price) || 0
-      if (assignedTo && assignedTo in totals) {
-        totals[assignedTo] += price
-      }
-    })
+    if (this.equalSplitMode && this.getEqualSplitCount() > 0) {
+      const equalShare = this.getReceiptTotal() / this.getEqualSplitCount()
+      this.people.forEach(p => { totals[String(p.id)] = equalShare })
+    } else {
+      // Calculate totals from all items including dynamically created divided sub-items
+      this.itemsContainerTarget.querySelectorAll('[data-item-id]').forEach(row => {
+        const assignedTo = row.dataset.assignedTo
+        const price = parseFloat(row.dataset.price) || 0
+        if (assignedTo && assignedTo in totals) {
+          totals[assignedTo] += price
+        }
+      })
+    }
 
     // Circle emojis matching color palette
     const circleEmojis = ['🔵', '🟢', '🟡', '🟣', '🔴', '🩵', '🩷', '🔷']
@@ -1110,6 +1349,30 @@ export default class extends Controller {
       mono += '------------------------------\n'
     })
 
+    // In equal-split mode, add an "Otros (N)" line for the unlisted shares so
+    // the printed grand total matches the receipt total instead of summing
+    // only the named people.
+    if (this.equalSplitMode) {
+      const count = this.getEqualSplitCount()
+      const missing = count - this.people.length
+      if (missing > 0 && count > 0) {
+        const equalShare = this.getReceiptTotal() / count
+        const subtotal = equalShare * missing
+        const tip = subtotal * tipPercent
+        const total = subtotal + tip
+        grandSubtotal += subtotal
+        grandTotal += total
+
+        mono += `⚪ Otros (${missing})\n`
+        if (tipPercent > 0) {
+          mono += `   Consumo:       ${formatMoney(subtotal)}\n`
+          mono += `   Propina:       ${formatMoney(tip)}\n`
+        }
+        mono += `   Total:         ${formatMoney(total)}\n`
+        mono += '------------------------------\n'
+      }
+    }
+
     if (tipPercent > 0) {
       mono += `   Subtotal:      ${formatMoney(grandSubtotal)}\n`
       mono += `   Propina (${(tipPercent * 100).toFixed(0)}%): ${formatMoney(grandTotal - grandSubtotal)}\n`
@@ -1118,6 +1381,10 @@ export default class extends Controller {
 
     // Build final text with header outside monospace and content inside
     let text = '🧾 *División de Cuenta*'
+    if (this.equalSplitMode) {
+      const count = this.getEqualSplitCount()
+      text += `\n_(Total dividido por igual entre ${count} ${count === 1 ? 'persona' : 'personas'})_`
+    }
     text += '```\n'
     text += mono
     text += '```'

@@ -23,7 +23,8 @@
 
     <div class="bg-white rounded-xl shadow-lg p-8">
       <% unless hotwire_native_app? %><h1 class="text-3xl font-bold text-gray-800 mb-2">Dividir Cuenta</h1><% end %>
-      <p class="text-gray-600 mb-8">Sube una foto de tu ticket de restaurante para dividir la cuenta</p>
+      <p class="text-gray-600 mb-2">Sube una foto de tu ticket de restaurante para dividir la cuenta</p>
+      <p class="mb-8"><%= link_to "📖 ¿Cómo funciona?", manual_split_checks_url, class: "text-indigo-500 text-sm font-medium hover:text-indigo-700" %></p>
 
       <%= form_with url: split_checks_path, method: :post, multipart: true, class: "space-y-6", data: { turbo: false, action: "submit->split-check-upload#submitForm" } do |f| %>
         <!-- Boton de Camara para Movil -->
@@ -96,7 +97,7 @@
               <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
-            Procesando ticket...
+            <span data-split-check-upload-target="loadingText">Subiendo imagen...</span>
           </span>
         </button>
       <% end %>

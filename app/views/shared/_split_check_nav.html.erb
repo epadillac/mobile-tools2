@@ -1,15 +1,7 @@
-<header class="header top-level-container hide@native" data-controller="split-check-nav">
-  <nav>
-    <ul class="main-navigation unstyled-list block-100">
-      <li>
-        <%= link_to "Subir Nuevo Ticket", new_split_check_path, class: "main-navigation__link decorated-link", data: { action: "click->split-check-nav#clearSplitData" } %>
-      </li>
-      <li>
-        <%= link_to "Components", components_path, class: "main-navigation__link decorated-link" %>
-      </li>
-      <li>
-        <%= link_to "Demo", demo_split_checks_path, class: "main-navigation__link decorated-link" %>
-      </li>
-    </ul>
+<header class="hide@native" style="display: flex; justify-content: center; padding: 0.5rem;" data-controller="split-check-nav">
+  <nav class="tab-navigation">
+    <%= link_to "Dividir", new_split_check_path, class: "tab-navigation__tab #{current_page?(new_split_check_path) || current_page?(split_check_path(id: 'current')) || current_page?(demo_split_checks_path) ? 'tab-navigation__tab--active' : ''}", data: { action: "click->split-check-nav#clearSplitData" } %>
+    <%= link_to "Facturar", new_invoice_path, class: "tab-navigation__tab #{current_page?(new_invoice_path) || current_page?(invoice_path(id: 'current')) ? 'tab-navigation__tab--active' : ''}" %>
+    <%= link_to "Manual", manual_split_checks_path, class: "tab-navigation__tab #{current_page?(manual_split_checks_path) ? 'tab-navigation__tab--active' : ''}" %>
   </nav>
 </header>

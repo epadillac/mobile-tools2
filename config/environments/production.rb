@@ -21,8 +21,11 @@ Rails.application.configure do
   # Enable serving of images, stylesheets, and JavaScripts from an asset server.
   # config.asset_host = "http://assets.example.com"
 
-  # Store uploaded files in Tigris Global Object Storage (see config/storage.yml for options).
-  config.active_storage.service = :tigris
+  # Store uploaded files on the droplet's local disk under Rails.root/storage.
+  # That directory is mounted from a Kamal docker volume in config/deploy.yml,
+  # so it survives container restarts and re-deploys. If you outgrow disk
+  # space, switch this back to :tigris (or another S3 service) and re-mount.
+  config.active_storage.service = :local
 
   # Assume all access to the app is happening through a SSL-terminating reverse proxy.
   config.assume_ssl = true

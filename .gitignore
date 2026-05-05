@@ -64,3 +64,13 @@ build-iPhoneSimulator/
 !/tmp/.keep
 /app/assets/builds/*
 !/app/assets/builds/.keep
+
+# Ruby Native (Playwright, screenshots, session data)
+.ruby_native/
+
+# Kamal deploy secrets — do NOT commit. The .kamal/secrets file holds
+# the registry token, RAILS_MASTER_KEY, API keys, etc.
+/.kamal/secrets
+/.kamal/secrets-*
+
+/config/master.key

@@ -1,0 +1,24 @@
+app:
+  mode: normal  # normal or advanced
+  entry_path: /split_checks/new  # Initial URL on app launch (defaults to first tab's path)
+
+appearance:
+  tint_color: "#007AFF"
+  background_color: "#FFFFFF"
+  # theme: auto  # auto (default), light, or dark
+  # landscape: true  # Allow landscape orientation on iPhone (defaults to portrait only)
+  # Dark mode example (replace the plain string above):
+  # background_color:
+  #   light: "#FFFFFF"
+  #   dark: "#1C1C1E"
+
+tabs:
+  - title: Dividir Cuenta
+    path: /split_checks/new
+    icon: book.pages
+  - title: Facturar
+    path: /invoices/new
+    icon: book.pages
+  - title: Components
+    path: /components
+    icon: bubble
