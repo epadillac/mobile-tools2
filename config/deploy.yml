@@ -43,6 +43,10 @@ proxy:
     path: /up                               # Rails default health endpoint
     interval: 5
     timeout: 30
+  # Forward X-Forwarded-For / X-Forwarded-Proto so Rails sees the real client
+  # IP (from Cloudflare or any upstream proxy) instead of the proxy's own IP.
+  # This makes log entries useful for spotting / blocking specific scanners.
+  forward_headers: true
 
 # Image registry credentials. The password (a token) comes from .kamal/secrets;
 # only the username is kept here, and even that is env-driven.

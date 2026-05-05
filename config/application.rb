@@ -41,6 +41,14 @@ module Demo
     # (Large receipts with 20+ items exceed cookie capacity)
     config.session_store :cache_store, expire_after: 1.hour
 
+    # Drop bot/vulnerability-scan requests (.env, .git/HEAD, wp-admin, *.php,
+    # etc.) before they reach Rails. Mounted at position 0 so it runs before
+    # ActionDispatch::HostAuthorization, RequestId, RemoteIp, and the rest —
+    # the request never touches sessions/cookies and never triggers a
+    # RoutingError that would clutter the logs.
+    require_relative "../app/middleware/block_bot_scans"
+    config.middleware.insert 0, BlockBotScans
+
     # Don't generate system test files.
     config.generators.system_tests = nil
   end
