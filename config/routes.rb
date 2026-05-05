@@ -1,4 +1,9 @@
 Rails.application.routes.draw do
+  # Reveal Rails' boot health to load balancers / kamal-proxy. Returns 200
+  # when the app has fully booted, 500 when it has not. Required by
+  # `proxy.healthcheck.path: /up` in config/deploy.yml.
+  get "up" => "rails/health#show", as: :rails_health_check
+
   resources :split_checks, only: %i[new create show] do
     collection do
       get :demo
