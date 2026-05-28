@@ -1,0 +1,52 @@
+<% content_for(:title) { "Energía - Canadian Solar" } %>
+
+<div class="min-h-screen bg-gray-100 py-8">
+  <div class="max-w-4xl mx-auto px-4">
+
+    <!-- Header card -->
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-lg font-bold text-gray-800">Generación de energía</h1>
+          <p class="text-sm text-gray-500">Canadian Solar · <%= l(Date.current, format: :long) rescue Date.current.to_s %></p>
+        </div>
+      </div>
+    </div>
+
+    <% if @fetch_error.present? %>
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-red-400">
+        <div class="flex items-start gap-3">
+          <svg class="w-6 h-6 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0l-7.1 12.25A2 2 0 005 19z"></path>
+          </svg>
+          <div>
+            <p class="font-medium text-gray-800">No se pudo cargar la información</p>
+            <p class="text-sm text-gray-500 mt-1"><%= @fetch_error %></p>
+          </div>
+        </div>
+      </div>
+    <% elsif @today_kwh.nil? %>
+      <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+        <p class="text-center text-gray-500">No hay datos disponibles.</p>
+      </div>
+    <% else %>
+      <!-- Hero: today's generation -->
+      <div class="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-xl shadow-lg p-8 mb-6 text-center">
+        <p class="text-sm font-medium text-amber-700 uppercase tracking-widest mb-3">Hoy</p>
+        <div class="flex items-baseline justify-center gap-2">
+          <span class="text-6xl font-bold text-amber-600 tabular-nums">
+            <%= number_with_precision(@today_kwh, precision: 2, delimiter: ",") %>
+          </span>
+          <span class="text-2xl font-semibold text-amber-500">kWh</span>
+        </div>
+        <p class="text-xs text-gray-500 mt-4">Energía generada en el día</p>
+      </div>
+    <% end %>
+
+  </div>
+</div>

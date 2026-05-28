@@ -25,6 +25,8 @@ Rails.application.routes.draw do
 
   resources :components, only: :index
 
+  resources :energy, only: :index
+
   namespace :components do
     resource :alert, only: :show do
       collection do
