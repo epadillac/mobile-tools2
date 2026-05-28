@@ -54,6 +54,9 @@
           <span class="text-2xl font-semibold text-amber-500">kWh</span>
         </div>
         <p class="text-xs text-gray-500 mt-4">Energía generada en el día</p>
+        <p class="text-xs text-gray-400 mt-1">
+          Última actualización: <%= l(@fetched_at, format: :long) rescue @fetched_at.strftime("%Y-%m-%d %H:%M:%S") %>
+        </p>
       </div>
     <% end %>
 

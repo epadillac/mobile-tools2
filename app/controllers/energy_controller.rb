@@ -8,9 +8,11 @@ class EnergyController < ApplicationController
 
   def index
     @today_kwh = fetch_today_kwh
+    @fetched_at = Time.current
   rescue StandardError => e
     Rails.logger.error("Energy fetch failed: #{e.message}")
     @today_kwh = nil
+    @fetched_at = Time.current
     @fetch_error = e.message
   end
 
