@@ -2,7 +2,10 @@ require "net/http"
 require "json"
 
 class EnergyController < ApplicationController
-  ENERGY_API_URL = "https://83ae-189-154-24-189.ngrok-free.app/energy/canadian_solar".freeze
+  ENERGY_API_URL = ENV.fetch(
+    "ENERGY_API_URL",
+    "https://energy-viewer2.fly.dev/energy/canadian_solar"
+  ).freeze
 
   layout "split_checks"
 
