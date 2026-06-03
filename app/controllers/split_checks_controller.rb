@@ -30,20 +30,29 @@ class SplitChecksController < ApplicationController
       # Notify via Telegram
       notify_telegram_receipt_parsed(@items, @receipt_total, @restaurant_name)
 
-      # Cache in session for page reloads
-      session[:receipt_items] = @items
-      session[:receipt_total] = @receipt_total
-      session[:restaurant_name] = @restaurant_name
+      # Cache the parsed result server-side for page reloads. Only a short token
+      # goes in the session cookie — storing the full items array there blew past
+      # the 4KB cookie limit (ActionDispatch::Cookies::CookieOverflow) on large
+      # receipts.
+      token = SecureRandom.uuid
+      Rails.cache.write(
+        receipt_cache_key(token),
+        { items: @items, receipt_total: @receipt_total, restaurant_name: @restaurant_name },
+        expires_in: 1.hour
+      )
+      session[:receipt_token] = token
 
       redirect_to split_check_path(id: "current")
     end
   end
 
   def show
-    if session[:receipt_items].present?
-      @items = session[:receipt_items].map(&:symbolize_keys)
-      @receipt_total = session[:receipt_total]
-      @restaurant_name = session[:restaurant_name]
+    data = session[:receipt_token].present? && Rails.cache.read(receipt_cache_key(session[:receipt_token]))
+
+    if data
+      @items = data[:items].map(&:symbolize_keys)
+      @receipt_total = data[:receipt_total]
+      @restaurant_name = data[:restaurant_name]
     else
       redirect_to new_split_check_path and return
     end
@@ -57,6 +66,10 @@ class SplitChecksController < ApplicationController
   def manual; end
 
   private
+
+  def receipt_cache_key(token)
+    "split_check:receipt:#{token}"
+  end
 
   def parse_receipt_items
     return { items: sample_items, rate_limited: false, receipt_total: nil } unless @receipt_image.present?

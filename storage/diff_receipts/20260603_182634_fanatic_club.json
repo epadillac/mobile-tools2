@@ -1,0 +1,198 @@
+{
+  "saved_at": "2026-06-03T18:26:34-05:00",
+  "restaurant_name": "FANATIC CLUB",
+  "receipt_total": 4934.0,
+  "items_sum": 4933.99,
+  "difference": 0.01,
+  "item_count": 31,
+  "items": [
+    {
+      "name": "CARNE SECA",
+      "quantity": 1,
+      "price": 185.58,
+      "is_modifier": false
+    },
+    {
+      "name": "PAPAS CON CARNE",
+      "quantity": 1,
+      "price": 40.43,
+      "is_modifier": false
+    },
+    {
+      "name": "LIMONADA MINERAL",
+      "quantity": 1,
+      "price": 81.91,
+      "is_modifier": false
+    },
+    {
+      "name": "SUERO 1/2",
+      "quantity": 1,
+      "price": 40.43,
+      "is_modifier": false
+    },
+    {
+      "name": "COCA COLA SIN AZUCAR",
+      "quantity": 1,
+      "price": 245.72,
+      "is_modifier": false
+    },
+    {
+      "name": "LIMONADA LT MINERAL",
+      "quantity": 1,
+      "price": 163.81,
+      "is_modifier": false
+    },
+    {
+      "name": "LIMONADA LT NATURAL",
+      "quantity": 1,
+      "price": 41.47,
+      "is_modifier": false
+    },
+    {
+      "name": "CARTA BLANCA CAGUAMI",
+      "quantity": 1,
+      "price": 114.04,
+      "is_modifier": false
+    },
+    {
+      "name": "AMSTEL ULTRA",
+      "quantity": 1,
+      "price": 684.27,
+      "is_modifier": false
+    },
+    {
+      "name": "BOHEMIA OBSCURA",
+      "quantity": 1,
+      "price": 102.64,
+      "is_modifier": false
+    },
+    {
+      "name": "BOHEMIA CRISTAL",
+      "quantity": 1,
+      "price": 205.28,
+      "is_modifier": false
+    },
+    {
+      "name": "PATA SECA 16 OZ",
+      "quantity": 1,
+      "price": 102.64,
+      "is_modifier": false
+    },
+    {
+      "name": "VEREDA TROPICAL 16 D",
+      "quantity": 1,
+      "price": 50.8,
+      "is_modifier": false
+    },
+    {
+      "name": "CLAMATO PREPARADO",
+      "quantity": 1,
+      "price": 30.07,
+      "is_modifier": false
+    },
+    {
+      "name": "MICHELADO CUBANO",
+      "quantity": 1,
+      "price": 120.27,
+      "is_modifier": false
+    },
+    {
+      "name": "CLAMATO PREPARADO SH",
+      "quantity": 1,
+      "price": 25.92,
+      "is_modifier": false
+    },
+    {
+      "name": "BONELLES 24 PZAS",
+      "quantity": 1,
+      "price": 372.2,
+      "is_modifier": false
+    },
+    {
+      "name": "SALSA AJO PICANTE",
+      "quantity": 1,
+      "price": 155.52,
+      "is_modifier": false
+    },
+    {
+      "name": "XX LAGER (6.0 X)",
+      "quantity": 1,
+      "price": 465.51,
+      "is_modifier": false
+    },
+    {
+      "name": "BIEN COCIDO",
+      "quantity": 1,
+      "price": 25.92,
+      "is_modifier": true
+    },
+    {
+      "name": "PIZZA HAWAIANA",
+      "quantity": 1,
+      "price": 309.99,
+      "is_modifier": false
+    },
+    {
+      "name": "LUNES CERVEZA NACION",
+      "quantity": 1,
+      "price": 25.92,
+      "is_modifier": false
+    },
+    {
+      "name": "PIZZA PEPPERONI",
+      "quantity": 1,
+      "price": 289.26,
+      "is_modifier": false
+    },
+    {
+      "name": "EXTRA TOCINO",
+      "quantity": 1,
+      "price": 37.32,
+      "is_modifier": true
+    },
+    {
+      "name": "EXTRA BONELESS",
+      "quantity": 1,
+      "price": 37.32,
+      "is_modifier": true
+    },
+    {
+      "name": "FANATITC SAMPLER",
+      "quantity": 1,
+      "price": 434.41,
+      "is_modifier": false
+    },
+    {
+      "name": "LUNES CERVEZA NACION",
+      "quantity": 1,
+      "price": 25.92,
+      "is_modifier": false
+    },
+    {
+      "name": "LUNES CERVEZA NACION",
+      "quantity": 1,
+      "price": 155.52,
+      "is_modifier": false
+    },
+    {
+      "name": "PIZZA PEPPERONI",
+      "quantity": 1,
+      "price": 289.26,
+      "is_modifier": false
+    },
+    {
+      "name": "EXTRA TOCINO",
+      "quantity": 1,
+      "price": 37.32,
+      "is_modifier": true
+    },
+    {
+      "name": "EXTRA BONELESS",
+      "quantity": 1,
+      "price": 37.32,
+      "is_modifier": true
+    }
+  ],
+  "original_filename": "IMG_1289.jpeg",
+  "content_type": "image/jpeg"
+}
