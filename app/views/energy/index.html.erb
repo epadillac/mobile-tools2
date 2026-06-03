@@ -15,81 +15,48 @@
           <h1 class="text-lg font-bold text-gray-800">Generación de energía</h1>
           <p class="text-sm text-gray-500"><%= l(Date.current, format: :long) rescue Date.current.to_s %></p>
         </div>
+        <%#
+          Rendered disabled by default (pointer-events-none + spinner) so it is
+          not clickable before Stimulus connects. The refresh-button controller
+          enables it once the energy_data frame loads OR errors out, so a
+          timeout still leaves the user able to retry.
+        %>
         <%= link_to energy_index_path,
-              data: { turbo_action: "replace" },
-              class: "shrink-0 inline-flex items-center gap-1 px-3 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors",
+              data: {
+                turbo_action: "replace",
+                controller: "refresh-button",
+                refresh_button_frame_value: "energy_data",
+                loading: "true",
+                action: "click->refresh-button#guard"
+              },
+              "aria-disabled": "true",
+              class: "shrink-0 inline-flex items-center gap-1 px-3 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600 transition-colors pointer-events-none opacity-60 cursor-not-allowed",
               title: "Actualizar" do %>
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <!-- Idle: refresh icon (hidden until loaded) -->
+          <svg data-refresh-button-target="idleIcon" class="hidden w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
           </svg>
-          <span>Actualizar</span>
+          <!-- Loading: spinner (shown by default) -->
+          <svg data-refresh-button-target="spinnerIcon" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+          </svg>
+          <span data-refresh-button-target="label">Cargando…</span>
         <% end %>
       </div>
     </div>
 
-    <% if @fetch_error.present? %>
-      <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-red-400">
-        <div class="flex items-start gap-3">
-          <svg class="w-6 h-6 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0l-7.1 12.25A2 2 0 005 19z"></path>
-          </svg>
-          <div>
-            <p class="font-medium text-gray-800">No se pudo cargar la información</p>
-            <p class="text-sm text-gray-500 mt-1"><%= @fetch_error %></p>
-          </div>
-        </div>
-      </div>
-    <% elsif @energy.blank? %>
-      <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
-        <p class="text-center text-gray-500">No hay datos disponibles.</p>
-      </div>
-    <% else %>
-      <%#
-        Per-inverter color themes. Full literal Tailwind class strings so the
-        JIT compiler picks them up (it can't see dynamically built names).
-      %>
-      <% themes = {
-           "canadian_solar" => { card: "from-amber-50 to-yellow-100",  label: "text-amber-700",   value: "text-amber-600",   unit: "text-amber-500",   accent: "text-amber-600" },
-           "goodwe"         => { card: "from-emerald-50 to-green-100", label: "text-emerald-700", value: "text-emerald-600", unit: "text-emerald-500", accent: "text-emerald-600" },
-           "aurora"         => { card: "from-sky-50 to-blue-100",      label: "text-sky-700",     value: "text-sky-600",     unit: "text-sky-500",     accent: "text-sky-600" }
-         } %>
-
-      <%# Total of today's generation across all inverters. %>
-      <% total_today = @sources.sum { |s| (@energy.dig(s[:key], "today")).to_f } %>
-      <div class="bg-gray-800 rounded-xl shadow-md px-5 py-4 mb-3">
-        <div class="flex items-center justify-between gap-4">
-          <div class="min-w-0">
-            <p class="text-sm font-bold uppercase tracking-wide text-gray-200">Total</p>
-            <p class="text-xs text-gray-400">Generación de hoy</p>
-          </div>
-          <div class="flex items-baseline justify-end gap-1 shrink-0">
-            <span class="text-4xl font-bold tabular-nums text-white">
-              <%= number_with_precision(total_today, precision: 2, delimiter: ",") %>
-            </span>
-            <span class="text-lg font-semibold text-gray-300">kWh</span>
-          </div>
-        </div>
-      </div>
-
-      <%#
-        Canadian Solar gets a full-width card; GoodWe and Aurora share a row,
-        one column each, keeping their green/blue themes.
-      %>
+    <%#
+      Lazy Turbo Frame: renders skeletons immediately, then fetches the real
+      cards from #data and swaps them in once the upstream API responds.
+    %>
+    <%= turbo_frame_tag "energy_data", src: data_energy_index_path, loading: :lazy do %>
       <div class="grid grid-cols-2 gap-3 mb-3">
-        <% @sources.each do |source| %>
-          <% full_width = source[:key] == "canadian_solar" %>
-          <div class="<%= "col-span-2" if full_width %>">
-            <%= render "inverter_card",
-                  source: source,
-                  data: @energy[source[:key]],
-                  theme: themes[source[:key]] || themes["canadian_solar"] %>
-          </div>
-        <% end %>
+        <%= render "skeleton_card" %>
+        <%= render "skeleton_card" %>
+        <%= render "skeleton_card" %>
+        <%= render "skeleton_card" %>
       </div>
-
-      <p class="text-xs text-gray-400 text-center mb-6">
-        Última actualización: <%= l(@fetched_at, format: :long) rescue @fetched_at.strftime("%Y-%m-%d %H:%M:%S") %>
-      </p>
     <% end %>
 
   </div>

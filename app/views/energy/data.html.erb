@@ -1,0 +1,73 @@
+<%#
+  Content for the lazy "energy_data" Turbo Frame defined in index.html.erb.
+  Replaces the skeleton placeholders with the real values (or an error/empty
+  state). Rendered without the page chrome — only the frame matters here.
+%>
+<%= turbo_frame_tag "energy_data" do %>
+  <% if @fetch_error.present? %>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6 border-l-4 border-red-400">
+      <div class="flex items-start gap-3">
+        <svg class="w-6 h-6 text-red-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M5 19h14a2 2 0 001.84-2.75L13.74 4a2 2 0 00-3.48 0l-7.1 12.25A2 2 0 005 19z"></path>
+        </svg>
+        <div>
+          <p class="font-medium text-gray-800">No se pudo cargar la información</p>
+          <p class="text-sm text-gray-500 mt-1"><%= @fetch_error %></p>
+        </div>
+      </div>
+    </div>
+  <% elsif @energy.blank? %>
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+      <p class="text-center text-gray-500">No hay datos disponibles.</p>
+    </div>
+  <% else %>
+    <%#
+      Per-inverter color themes. Full literal Tailwind class strings so the
+      JIT compiler picks them up (it can't see dynamically built names).
+    %>
+    <% themes = {
+         "canadian_solar" => { card: "from-amber-50 to-yellow-100",  label: "text-amber-700",   value: "text-amber-600",   unit: "text-amber-500",   accent: "text-amber-600" },
+         "goodwe"         => { card: "from-emerald-50 to-green-100", label: "text-emerald-700", value: "text-emerald-600", unit: "text-emerald-500", accent: "text-emerald-600" },
+         "aurora"         => { card: "from-sky-50 to-blue-100",      label: "text-sky-700",     value: "text-sky-600",     unit: "text-sky-500",     accent: "text-sky-600" }
+       } %>
+
+    <% total_today = @sources.sum { |s| (@energy.dig(s[:key], "today")).to_f } %>
+
+    <%#
+      Two-column grid:
+        Row 1 → Canadian Solar (left) + Total (right)
+        Row 2 → GoodWe (left) + Aurora (right)
+    %>
+    <div class="grid grid-cols-2 gap-3 mb-3">
+      <!-- Row 1, left: Canadian Solar -->
+      <%= render "inverter_card",
+            source: @sources.find { |s| s[:key] == "canadian_solar" },
+            data: @energy["canadian_solar"],
+            theme: themes["canadian_solar"] %>
+
+      <!-- Row 1, right: Total -->
+      <div class="bg-gray-800 rounded-xl shadow-md px-4 py-4 h-full">
+        <p class="text-sm font-bold uppercase tracking-wide text-gray-200">Total</p>
+        <p class="text-xs text-gray-400">Generación de hoy</p>
+        <div class="flex items-baseline gap-1 mt-2">
+          <span class="text-3xl font-bold tabular-nums text-white">
+            <%= number_with_precision(total_today, precision: 2, delimiter: ",") %>
+          </span>
+          <span class="text-base font-semibold text-gray-300">kWh</span>
+        </div>
+      </div>
+
+      <!-- Row 2: GoodWe (left) + Aurora (right) -->
+      <% @sources.select { |s| %w[goodwe aurora].include?(s[:key]) }.each do |source| %>
+        <%= render "inverter_card",
+              source: source,
+              data: @energy[source[:key]],
+              theme: themes[source[:key]] %>
+      <% end %>
+    </div>
+
+    <p class="text-xs text-gray-400 text-center mb-6">
+      Última actualización: <%= l(@fetched_at, format: :long) rescue @fetched_at.strftime("%Y-%m-%d %H:%M:%S") %>
+    </p>
+  <% end %>
+<% end %>

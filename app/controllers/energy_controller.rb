@@ -16,7 +16,16 @@ class EnergyController < ApplicationController
 
   layout "split_checks"
 
+  # Renders the page shell immediately with skeleton placeholders. The actual
+  # values are pulled in by a lazy Turbo Frame that hits #data, so the slow
+  # upstream fetch never blocks the first paint.
   def index
+    @sources = SOURCES
+  end
+
+  # Frame target loaded lazily by #index. Does the blocking API call and renders
+  # the real cards, which Turbo swaps in for the skeletons.
+  def data
     @energy = fetch_energy
     @sources = SOURCES
     @fetched_at = Time.current

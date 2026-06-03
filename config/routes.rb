@@ -25,7 +25,9 @@ Rails.application.routes.draw do
 
   resources :components, only: :index
 
-  resources :energy, only: :index
+  resources :energy, only: :index do
+    get :data, on: :collection
+  end
 
   namespace :components do
     resource :alert, only: :show do
