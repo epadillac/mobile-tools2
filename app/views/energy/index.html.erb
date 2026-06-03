@@ -71,46 +71,21 @@
         </div>
       </div>
 
-      <!-- One compact card per inverter, in display order -->
-      <% @sources.each do |source| %>
-        <% data = @energy[source[:key]] %>
-        <% today = data && data["today"] %>
-        <% month = data && data["month"] %>
-        <% t = themes[source[:key]] || themes["canadian_solar"] %>
-        <div class="bg-gradient-to-br <%= t[:card] %> rounded-xl shadow-md px-5 py-4 mb-3">
-          <div class="flex items-center justify-between gap-4">
-            <div class="min-w-0">
-              <p class="text-sm font-bold uppercase tracking-wide <%= t[:label] %>"><%= source[:name] %></p>
-              <% if source[:location].present? %>
-                <p class="flex items-center gap-1 text-xs text-gray-500">
-                  <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                  </svg>
-                  <span class="truncate"><%= source[:location] %></span>
-                </p>
-              <% end %>
-            </div>
-            <% if today.present? %>
-              <div class="text-right shrink-0">
-                <div class="flex items-baseline justify-end gap-1">
-                  <span class="text-4xl font-bold tabular-nums <%= t[:value] %>">
-                    <%= number_with_precision(today.to_f, precision: 2, delimiter: ",") %>
-                  </span>
-                  <span class="text-lg font-semibold <%= t[:unit] %>">kWh</span>
-                </div>
-                <% if month.present? %>
-                  <p class="text-xs font-medium tabular-nums <%= t[:accent] %>">
-                    Mes: <%= number_with_precision(month.to_f, precision: 2, delimiter: ",") %> kWh
-                  </p>
-                <% end %>
-              </div>
-            <% else %>
-              <span class="text-sm text-gray-500 shrink-0">Sin datos</span>
-            <% end %>
+      <%#
+        Canadian Solar gets a full-width card; GoodWe and Aurora share a row,
+        one column each, keeping their green/blue themes.
+      %>
+      <div class="grid grid-cols-2 gap-3 mb-3">
+        <% @sources.each do |source| %>
+          <% full_width = source[:key] == "canadian_solar" %>
+          <div class="<%= "col-span-2" if full_width %>">
+            <%= render "inverter_card",
+                  source: source,
+                  data: @energy[source[:key]],
+                  theme: themes[source[:key]] || themes["canadian_solar"] %>
           </div>
-        </div>
-      <% end %>
+        <% end %>
+      </div>
 
       <p class="text-xs text-gray-400 text-center mb-6">
         Última actualización: <%= l(@fetched_at, format: :long) rescue @fetched_at.strftime("%Y-%m-%d %H:%M:%S") %>

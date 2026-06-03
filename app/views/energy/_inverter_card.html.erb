@@ -1,0 +1,36 @@
+<%#
+  Renders one inverter card.
+  locals:
+    source - { key:, name:, location: }
+    data   - the energy hash entry for this source (or nil)
+    theme  - color classes hash (card/label/value/unit/accent)
+%>
+<% today = data && data["today"] %>
+<% month = data && data["month"] %>
+<div class="bg-gradient-to-br <%= theme[:card] %> rounded-xl shadow-md px-4 py-4 h-full">
+  <p class="text-sm font-bold uppercase tracking-wide <%= theme[:label] %>"><%= source[:name] %></p>
+  <% if source[:location].present? %>
+    <p class="flex items-center gap-1 text-xs text-gray-500">
+      <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+      </svg>
+      <span class="truncate"><%= source[:location] %></span>
+    </p>
+  <% end %>
+  <% if today.present? %>
+    <div class="flex items-baseline gap-1 mt-2">
+      <span class="text-3xl font-bold tabular-nums <%= theme[:value] %>">
+        <%= number_with_precision(today.to_f, precision: 2, delimiter: ",") %>
+      </span>
+      <span class="text-base font-semibold <%= theme[:unit] %>">kWh</span>
+    </div>
+    <% if month.present? %>
+      <p class="text-xs font-medium tabular-nums <%= theme[:accent] %>">
+        Mes: <%= number_with_precision(month.to_f, precision: 2, delimiter: ",") %> kWh
+      </p>
+    <% end %>
+  <% else %>
+    <span class="text-sm text-gray-500">Sin datos</span>
+  <% end %>
+</div>
