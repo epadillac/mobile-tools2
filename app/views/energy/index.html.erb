@@ -1,4 +1,4 @@
-<% content_for(:title) { "Energía - Canadian Solar" } %>
+<% content_for(:title) { "Energía" } %>
 
 <div class="min-h-screen bg-gray-100 py-8">
   <div class="max-w-4xl mx-auto px-4">
@@ -13,7 +13,7 @@
         </div>
         <div class="flex-1">
           <h1 class="text-lg font-bold text-gray-800">Generación de energía</h1>
-          <p class="text-sm text-gray-500">Canadian Solar · <%= l(Date.current, format: :long) rescue Date.current.to_s %></p>
+          <p class="text-sm text-gray-500"><%= l(Date.current, format: :long) rescue Date.current.to_s %></p>
         </div>
         <%= link_to energy_index_path,
               data: { turbo_action: "replace" },
@@ -39,25 +39,40 @@
           </div>
         </div>
       </div>
-    <% elsif @today_kwh.nil? %>
+    <% elsif @energy.blank? %>
       <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
         <p class="text-center text-gray-500">No hay datos disponibles.</p>
       </div>
     <% else %>
-      <!-- Hero: today's generation -->
-      <div class="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-xl shadow-lg p-8 mb-6 text-center">
-        <p class="text-sm font-medium text-amber-700 uppercase tracking-widest mb-3">Hoy</p>
-        <div class="flex items-baseline justify-center gap-2">
-          <span class="text-6xl font-bold text-amber-600 tabular-nums">
-            <%= number_with_precision(@today_kwh, precision: 2, delimiter: ",") %>
-          </span>
-          <span class="text-2xl font-semibold text-amber-500">kWh</span>
+      <!-- One card per inverter, in display order -->
+      <% @sources.each do |source| %>
+        <% data = @energy[source[:key]] %>
+        <% today = data && data["today"] %>
+        <% month = data && data["month"] %>
+        <div class="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-xl shadow-lg p-8 mb-6 text-center">
+          <p class="text-sm font-medium text-amber-700 uppercase tracking-widest mb-3"><%= source[:name] %></p>
+          <% if today.present? %>
+            <div class="flex items-baseline justify-center gap-2">
+              <span class="text-6xl font-bold text-amber-600 tabular-nums">
+                <%= number_with_precision(today.to_f, precision: 2, delimiter: ",") %>
+              </span>
+              <span class="text-2xl font-semibold text-amber-500">kWh</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-4">Energía generada en el día</p>
+            <% if month.present? %>
+              <p class="text-sm font-medium text-amber-600 mt-3 tabular-nums">
+                Mes: <%= number_with_precision(month.to_f, precision: 2, delimiter: ",") %> kWh
+              </p>
+            <% end %>
+          <% else %>
+            <p class="text-sm text-gray-500 mt-2">Sin datos</p>
+          <% end %>
         </div>
-        <p class="text-xs text-gray-500 mt-4">Energía generada en el día</p>
-        <p class="text-xs text-gray-400 mt-1">
-          Última actualización: <%= l(@fetched_at, format: :long) rescue @fetched_at.strftime("%Y-%m-%d %H:%M:%S") %>
-        </p>
-      </div>
+      <% end %>
+
+      <p class="text-xs text-gray-400 text-center mb-6">
+        Última actualización: <%= l(@fetched_at, format: :long) rescue @fetched_at.strftime("%Y-%m-%d %H:%M:%S") %>
+      </p>
     <% end %>
 
   </div>

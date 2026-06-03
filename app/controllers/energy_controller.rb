@@ -4,24 +4,33 @@ require "json"
 class EnergyController < ApplicationController
   ENERGY_API_URL = ENV.fetch(
     "ENERGY_API_URL",
-    "https://energy-viewer2.fly.dev/energy/canadian_solar"
+    "https://energy-viewer2.fly.dev/energy/all"
   ).freeze
+
+  # Inverters in display order: Canadian Solar first, then GoodWe, then Aurora.
+  SOURCES = [
+    { key: "canadian_solar", name: "Canadian Solar" },
+    { key: "goodwe", name: "GoodWe" },
+    { key: "aurora", name: "Aurora" }
+  ].freeze
 
   layout "split_checks"
 
   def index
-    @today_kwh = fetch_today_kwh
+    @energy = fetch_energy
+    @sources = SOURCES
     @fetched_at = Time.current
   rescue StandardError => e
     Rails.logger.error("Energy fetch failed: #{e.message}")
-    @today_kwh = nil
+    @energy = nil
+    @sources = SOURCES
     @fetched_at = Time.current
     @fetch_error = e.message
   end
 
   private
 
-  def fetch_today_kwh
+  def fetch_energy
     uri = URI(ENERGY_API_URL)
     # verify_mode is VERIFY_NONE because this is a temporary ngrok dev URL and
     # macOS Ruby's OpenSSL trips on "unable to get certificate CRL" against it.
@@ -39,6 +48,6 @@ class EnergyController < ApplicationController
 
     return nil unless response.is_a?(Net::HTTPSuccess)
 
-    JSON.parse(response.body)["today"]
+    JSON.parse(response.body)
   end
 end
