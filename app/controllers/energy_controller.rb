@@ -9,9 +9,9 @@ class EnergyController < ApplicationController
 
   # Inverters in display order: Canadian Solar first, then GoodWe, then Aurora.
   SOURCES = [
-    { key: "canadian_solar", name: "Canadian Solar" },
-    { key: "goodwe", name: "GoodWe" },
-    { key: "aurora", name: "Aurora" }
+    { key: "canadian_solar", name: "Canadian Solar", location: "Aldama, México" },
+    { key: "goodwe", name: "GoodWe", location: "Chihuahua, México" },
+    { key: "aurora", name: "Aurora", location: "Chihuahua, México" }
   ].freeze
 
   layout "split_checks"

@@ -54,6 +54,23 @@
            "aurora"         => { card: "from-sky-50 to-blue-100",      label: "text-sky-700",     value: "text-sky-600",     unit: "text-sky-500",     accent: "text-sky-600" }
          } %>
 
+      <%# Total of today's generation across all inverters. %>
+      <% total_today = @sources.sum { |s| (@energy.dig(s[:key], "today")).to_f } %>
+      <div class="bg-gray-800 rounded-xl shadow-md px-5 py-4 mb-3">
+        <div class="flex items-center justify-between gap-4">
+          <div class="min-w-0">
+            <p class="text-sm font-bold uppercase tracking-wide text-gray-200">Total</p>
+            <p class="text-xs text-gray-400">Generación de hoy</p>
+          </div>
+          <div class="flex items-baseline justify-end gap-1 shrink-0">
+            <span class="text-4xl font-bold tabular-nums text-white">
+              <%= number_with_precision(total_today, precision: 2, delimiter: ",") %>
+            </span>
+            <span class="text-lg font-semibold text-gray-300">kWh</span>
+          </div>
+        </div>
+      </div>
+
       <!-- One compact card per inverter, in display order -->
       <% @sources.each do |source| %>
         <% data = @energy[source[:key]] %>
@@ -64,7 +81,15 @@
           <div class="flex items-center justify-between gap-4">
             <div class="min-w-0">
               <p class="text-sm font-bold uppercase tracking-wide <%= t[:label] %>"><%= source[:name] %></p>
-              <p class="text-xs text-gray-500">Hoy</p>
+              <% if source[:location].present? %>
+                <p class="flex items-center gap-1 text-xs text-gray-500">
+                  <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  <span class="truncate"><%= source[:location] %></span>
+                </p>
+              <% end %>
             </div>
             <% if today.present? %>
               <div class="text-right shrink-0">
