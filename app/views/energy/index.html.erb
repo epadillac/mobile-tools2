@@ -1,13 +1,13 @@
 <% content_for(:title) { "Energía" } %>
 
-<div class="min-h-screen bg-gray-100 py-8">
+<div class="min-h-screen bg-gray-100 py-4">
   <div class="max-w-4xl mx-auto px-4">
 
     <!-- Header card -->
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <div class="bg-white rounded-xl shadow-md p-4 mb-3">
       <div class="flex items-center gap-3">
-        <div class="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
           </svg>
         </div>
@@ -44,29 +44,46 @@
         <p class="text-center text-gray-500">No hay datos disponibles.</p>
       </div>
     <% else %>
-      <!-- One card per inverter, in display order -->
+      <%#
+        Per-inverter color themes. Full literal Tailwind class strings so the
+        JIT compiler picks them up (it can't see dynamically built names).
+      %>
+      <% themes = {
+           "canadian_solar" => { card: "from-amber-50 to-yellow-100",  label: "text-amber-700",   value: "text-amber-600",   unit: "text-amber-500",   accent: "text-amber-600" },
+           "goodwe"         => { card: "from-emerald-50 to-green-100", label: "text-emerald-700", value: "text-emerald-600", unit: "text-emerald-500", accent: "text-emerald-600" },
+           "aurora"         => { card: "from-sky-50 to-blue-100",      label: "text-sky-700",     value: "text-sky-600",     unit: "text-sky-500",     accent: "text-sky-600" }
+         } %>
+
+      <!-- One compact card per inverter, in display order -->
       <% @sources.each do |source| %>
         <% data = @energy[source[:key]] %>
         <% today = data && data["today"] %>
         <% month = data && data["month"] %>
-        <div class="bg-gradient-to-br from-amber-50 to-yellow-100 rounded-xl shadow-lg p-8 mb-6 text-center">
-          <p class="text-sm font-medium text-amber-700 uppercase tracking-widest mb-3"><%= source[:name] %></p>
-          <% if today.present? %>
-            <div class="flex items-baseline justify-center gap-2">
-              <span class="text-6xl font-bold text-amber-600 tabular-nums">
-                <%= number_with_precision(today.to_f, precision: 2, delimiter: ",") %>
-              </span>
-              <span class="text-2xl font-semibold text-amber-500">kWh</span>
+        <% t = themes[source[:key]] || themes["canadian_solar"] %>
+        <div class="bg-gradient-to-br <%= t[:card] %> rounded-xl shadow-md px-5 py-4 mb-3">
+          <div class="flex items-center justify-between gap-4">
+            <div class="min-w-0">
+              <p class="text-sm font-bold uppercase tracking-wide <%= t[:label] %>"><%= source[:name] %></p>
+              <p class="text-xs text-gray-500">Hoy</p>
             </div>
-            <p class="text-xs text-gray-500 mt-4">Energía generada en el día</p>
-            <% if month.present? %>
-              <p class="text-sm font-medium text-amber-600 mt-3 tabular-nums">
-                Mes: <%= number_with_precision(month.to_f, precision: 2, delimiter: ",") %> kWh
-              </p>
+            <% if today.present? %>
+              <div class="text-right shrink-0">
+                <div class="flex items-baseline justify-end gap-1">
+                  <span class="text-4xl font-bold tabular-nums <%= t[:value] %>">
+                    <%= number_with_precision(today.to_f, precision: 2, delimiter: ",") %>
+                  </span>
+                  <span class="text-lg font-semibold <%= t[:unit] %>">kWh</span>
+                </div>
+                <% if month.present? %>
+                  <p class="text-xs font-medium tabular-nums <%= t[:accent] %>">
+                    Mes: <%= number_with_precision(month.to_f, precision: 2, delimiter: ",") %> kWh
+                  </p>
+                <% end %>
+              </div>
+            <% else %>
+              <span class="text-sm text-gray-500 shrink-0">Sin datos</span>
             <% end %>
-          <% else %>
-            <p class="text-sm text-gray-500 mt-2">Sin datos</p>
-          <% end %>
+          </div>
         </div>
       <% end %>
 
