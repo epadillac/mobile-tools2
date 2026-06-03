@@ -77,7 +77,7 @@ env:
 
     # Upstream solar API consumed by EnergyController. Not a secret, so it
     # lives here in clear text rather than env.secret.
-    ENERGY_API_URL: https://energy-viewer2.fly.dev/energy/canadian_solar
+    ENERGY_API_URL: https://energy-viewer2.fly.dev/energy/all
 
     # Bump this if your droplet has more cores. 1 worker / 3 threads fits the
     # Basic $6 droplet (1GB RAM); Solid Queue runs in the same process.
