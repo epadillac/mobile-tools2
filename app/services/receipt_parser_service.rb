@@ -90,7 +90,7 @@ class ReceiptParserService
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
     http.verify_mode = OpenSSL::SSL::VERIFY_NONE # TODO: Fix SSL certs for production
-    http.read_timeout = 60
+    http.read_timeout = 30
 
     request = Net::HTTP::Post.new(uri)
     request["Content-Type"] = "application/json"
@@ -124,7 +124,11 @@ class ReceiptParserService
         }
       ],
       generationConfig: {
-        response_mime_type: "application/json"
+        response_mime_type: "application/json",
+        # gemini-2.5-flash "thinks" by default, which adds tens of seconds per
+        # call. Receipt extraction doesn't need it — disable to keep responses
+        # fast (a few seconds) so the parse stays well under proxy timeouts.
+        thinkingConfig: { thinkingBudget: 0 }
       },
       systemInstruction: {
         parts: [

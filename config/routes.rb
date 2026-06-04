@@ -5,6 +5,9 @@ Rails.application.routes.draw do
   get "up" => "rails/health#show", as: :rails_health_check
 
   resources :split_checks, only: %i[new create show] do
+    member do
+      get :status
+    end
     collection do
       get :demo
       get :manual

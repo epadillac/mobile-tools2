@@ -1,0 +1,38 @@
+<% content_for(:title) { "Dividir Cuenta - Procesando" } %>
+
+<%#
+  Shown while the receipt is parsed in the background (ReceiptParseJob). The
+  receipt-poll controller polls #status and reloads this page into the full
+  result UI once parsing finishes (or sends the user back on error).
+%>
+<div class="min-h-screen bg-gray-100 py-8"
+     data-controller="receipt-poll"
+     data-receipt-poll-url-value="<%= status_split_check_path(id: "current") %>"
+     data-receipt-poll-redirect-value="<%= split_check_path(id: "current") %>"
+     data-receipt-poll-interval-value="2000">
+  <div class="max-w-md mx-auto px-4">
+
+    <div class="bg-white rounded-xl shadow-lg p-6 mb-4 text-center">
+      <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-3">
+        <svg class="w-6 h-6 text-indigo-600 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+        </svg>
+      </div>
+      <h1 class="text-lg font-bold text-gray-800">Procesando tu ticket…</h1>
+      <p class="text-sm text-gray-500 mt-1">Esto puede tardar unos segundos.</p>
+    </div>
+
+    <%# Skeleton placeholders mimicking the parsed item list. %>
+    <div class="bg-white rounded-xl shadow-lg p-4 animate-pulse">
+      <div class="h-4 w-32 bg-gray-200 rounded mb-4"></div>
+      <% 5.times do %>
+        <div class="flex items-center justify-between py-3 border-b border-gray-100">
+          <div class="h-4 w-40 bg-gray-200 rounded"></div>
+          <div class="h-4 w-16 bg-gray-200 rounded"></div>
+        </div>
+      <% end %>
+    </div>
+
+  </div>
+</div>

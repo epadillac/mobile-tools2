@@ -16,6 +16,13 @@ production:
     schedule: "15 4 * * *"     # 04:15 UTC every day
     args: [30]                  # retention in days; bump to 60 if you want more history
 
+  prune_receipt_uploads:
+    class: ReceiptUploadsCleanupJob
+    queue: maintenance
+    description: "Delete orphaned receipt uploads older than 6h from tmp/receipt_uploads"
+    schedule: "45 * * * *"     # every hour at :45
+    args: [6]                   # retention in hours
+
   vacuum_sqlite_databases:
     class: SqliteVacuumJob
     queue: maintenance

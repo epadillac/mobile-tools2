@@ -7,55 +7,57 @@ class SplitChecksController < ApplicationController
 
   def create
     @receipt_image = params[:receipt_image]
-    result = parse_receipt_items
 
-    if result[:rate_limited]
-      flash.now[:alert] = "El servicio está ocupado. Por favor espera aproximadamente un minuto e inténtalo de nuevo."
-      render :new, status: :too_many_requests
-    elsif result[:overloaded]
-      flash.now[:alert] = "El servicio de IA está saturado en este momento. La imagen está bien, solo intenta de nuevo en unos segundos."
-      render :new, status: :service_unavailable
-    elsif result[:items].empty?
-      flash.now[:alert] = "No se pudo procesar el ticket. Por favor inténtalo de nuevo con una imagen más clara."
-      render :new, status: :unprocessable_entity
-    else
-      @items = result[:items]
-      @receipt_total = result[:receipt_total]
-      @restaurant_name = result[:restaurant_name]
-      @optimized_image_path = result[:optimized_image_path]
-
-      # Save receipt if there's a diff for future test development
-      save_diff_receipt(@optimized_image_path, @items, @receipt_total, @restaurant_name)
-
-      # Notify via Telegram
-      notify_telegram_receipt_parsed(@items, @receipt_total, @restaurant_name)
-
-      # Cache the parsed result server-side for page reloads. Only a short token
-      # goes in the session cookie — storing the full items array there blew past
-      # the 4KB cookie limit (ActionDispatch::Cookies::CookieOverflow) on large
-      # receipts.
-      token = SecureRandom.uuid
-      Rails.cache.write(
-        receipt_cache_key(token),
-        { items: @items, receipt_total: @receipt_total, restaurant_name: @restaurant_name },
-        expires_in: 1.hour
-      )
-      session[:receipt_token] = token
-
-      redirect_to split_check_path(id: "current")
+    # No image → the instant demo/sample path. Nothing slow to do, so store the
+    # result directly and go straight to the result page.
+    unless @receipt_image.present?
+      store_receipt(status: "ready", items: sample_items, receipt_total: nil, restaurant_name: nil)
+      redirect_to split_check_path(id: "current") and return
     end
+
+    # Parsing a real receipt can take ~90s (Gemini), which trips proxy/Cloudflare
+    # timeouts if done in the request. Hand it to a background job, mark the
+    # result "processing", and redirect immediately. The show page polls #status.
+    token = SecureRandom.uuid
+    session[:receipt_token] = token
+
+    image_path = persist_upload(@receipt_image, token)
+    Rails.cache.write(receipt_cache_key(token), { status: "processing" }, expires_in: 1.hour)
+
+    ReceiptParseJob.perform_later(
+      token: token,
+      image_path: image_path,
+      content_type: @receipt_image.content_type || "image/jpeg",
+      original_filename: @receipt_image.original_filename,
+      request_ip: request.remote_ip,
+      request_ua: request.user_agent
+    )
+
+    redirect_to split_check_path(id: "current")
   end
 
   def show
-    data = session[:receipt_token].present? && Rails.cache.read(receipt_cache_key(session[:receipt_token]))
+    data = read_receipt
 
-    if data
+    case data && data[:status]
+    when "ready"
       @items = data[:items].map(&:symbolize_keys)
       @receipt_total = data[:receipt_total]
       @restaurant_name = data[:restaurant_name]
+    when "processing"
+      render :processing
+    when "error"
+      flash.now[:alert] = error_message_for(data[:reason])
+      render :new, status: :unprocessable_entity
     else
-      redirect_to new_split_check_path and return
+      redirect_to new_split_check_path
     end
+  end
+
+  # Polled by the processing page until the background parse finishes.
+  def status
+    data = read_receipt
+    render json: { status: data ? data[:status] : "missing", reason: data && data[:reason] }
   end
 
   def demo
@@ -71,35 +73,36 @@ class SplitChecksController < ApplicationController
     "split_check:receipt:#{token}"
   end
 
-  def parse_receipt_items
-    return { items: sample_items, rate_limited: false, receipt_total: nil } unless @receipt_image.present?
+  def read_receipt
+    return nil if session[:receipt_token].blank?
+    Rails.cache.read(receipt_cache_key(session[:receipt_token]))
+  end
 
-    # Get the tempfile path from the uploaded file
-    image_path = @receipt_image.tempfile.path
-    content_type = @receipt_image.content_type || "image/jpeg"
+  def store_receipt(payload)
+    session[:receipt_token] = SecureRandom.uuid
+    Rails.cache.write(receipt_cache_key(session[:receipt_token]), payload, expires_in: 1.hour)
+  end
 
-    # Use Gemini directly (Claude disabled)
-    gemini_service = ReceiptParserService.new(image_path, content_type)
-    items = gemini_service.parse
-    receipt_total = gemini_service.receipt_total
-    restaurant_name = gemini_service.restaurant_name
+  # Copy the uploaded tempfile somewhere durable: the request's tempfile is
+  # cleaned up once we redirect, but the background job needs to read it later.
+  def persist_upload(upload, token)
+    dir = Rails.root.join("tmp", "receipt_uploads")
+    FileUtils.mkdir_p(dir)
+    ext = File.extname(upload.original_filename.to_s).presence || ".jpg"
+    dest = dir.join("#{token}#{ext}")
+    FileUtils.cp(upload.tempfile.path, dest)
+    dest.to_s
+  end
 
-    if gemini_service.rate_limited?
-      return { items: [], rate_limited: true, overloaded: false, receipt_total: nil, restaurant_name: nil }
+  def error_message_for(reason)
+    case reason
+    when "rate_limited"
+      "El servicio está ocupado. Por favor espera aproximadamente un minuto e inténtalo de nuevo."
+    when "overloaded"
+      "El servicio de IA está saturado en este momento. La imagen está bien, solo intenta de nuevo en unos segundos."
+    else
+      "No se pudo procesar el ticket. Por favor inténtalo de nuevo con una imagen más clara."
     end
-
-    if gemini_service.overloaded?
-      return { items: [], rate_limited: false, overloaded: true, receipt_total: nil, restaurant_name: nil }
-    end
-
-    {
-      items: items.presence || [],
-      rate_limited: false,
-      overloaded: false,
-      receipt_total: receipt_total,
-      restaurant_name: restaurant_name,
-      optimized_image_path: gemini_service.image_path
-    }
   end
 
   def sample_items
@@ -114,100 +117,6 @@ class SplitChecksController < ApplicationController
       { name: "Leche Coco", quantity: 1, price: 10.00, is_modifier: true },
       { name: "Esencia Vainilla", quantity: 1, price: 10.00, is_modifier: true }
     ]
-  end
-
-  def notify_telegram_receipt_parsed(items, receipt_total, restaurant_name)
-    return unless @optimized_image_path.present? && File.exist?(@optimized_image_path)
-
-    # Copy optimized image since tempfile may be cleaned up after redirect
-    temp_copy = Tempfile.new(["receipt_notify", ".jpg"])
-    FileUtils.cp(@optimized_image_path, temp_copy.path)
-
-    request_ip = request.remote_ip
-    request_ua = request.user_agent
-    content_type = "image/jpeg"
-
-    Thread.new do
-      begin
-        # Take screenshot of parsed result
-        screenshot_path = ReceiptScreenshotService.new(
-          items: items,
-          receipt_total: receipt_total,
-          restaurant_name: restaurant_name
-        ).capture
-
-        # Send receipt image + text notification
-        TelegramNotifierService.new.notify_receipt_parsed(
-          items: items,
-          receipt_total: receipt_total,
-          restaurant_name: restaurant_name,
-          image_path: temp_copy.path,
-          content_type: content_type,
-          request_info: {
-            ip: request_ip,
-            user_agent: request_ua
-          }
-        )
-
-        # Send screenshot as a second message if available
-        if screenshot_path && File.exist?(screenshot_path)
-          TelegramNotifierService.new.send_screenshot(
-            image_path: screenshot_path,
-            caption: "📸 Parsed result for #{restaurant_name || 'receipt'}"
-          )
-          File.delete(screenshot_path) rescue nil
-        end
-      rescue StandardError => e
-        Rails.logger.error("Telegram notification thread error: #{e.message}")
-      ensure
-        temp_copy.close
-        temp_copy.unlink
-      end
-    end
-  rescue StandardError => e
-    Rails.logger.error("Telegram notification failed: #{e.message}")
-  end
-
-  def save_diff_receipt(image_path, items, receipt_total, restaurant_name)
-    return unless image_path.present? && File.exist?(image_path) && receipt_total.present? && items.any?
-
-    items_sum = items.sum { |item| item[:price].to_f }
-    difference = (receipt_total - items_sum).abs.round(2)
-
-    # Only save if there's a meaningful difference
-    return if difference < 0.01
-
-    diff_dir = Rails.root.join("storage", "diff_receipts")
-    FileUtils.mkdir_p(diff_dir)
-
-    # Generate a timestamped filename based on restaurant name
-    timestamp = Time.current.strftime("%Y%m%d_%H%M%S")
-    safe_name = (restaurant_name || "unknown").downcase.gsub(/[^a-z0-9]+/, "_").gsub(/^_|_$/, "")
-    base_name = "#{timestamp}_#{safe_name}"
-
-    # Save the optimized receipt image
-    dest_path = diff_dir.join("#{base_name}.jpg")
-    FileUtils.cp(image_path, dest_path)
-
-    # Save metadata JSON with parsed data and diff info
-    metadata = {
-      saved_at: Time.current.iso8601,
-      restaurant_name: restaurant_name,
-      receipt_total: receipt_total,
-      items_sum: items_sum.round(2),
-      difference: difference,
-      item_count: items.count,
-      items: items,
-      original_filename: @receipt_image&.original_filename,
-      content_type: "image/jpeg"
-    }
-
-    metadata_path = diff_dir.join("#{base_name}.json")
-    File.write(metadata_path, JSON.pretty_generate(metadata))
-
-    Rails.logger.info("Saved diff receipt: #{base_name} (diff: $#{difference})")
-  rescue StandardError => e
-    Rails.logger.error("Failed to save diff receipt: #{e.message}")
   end
 
   def authenticate_with_password
