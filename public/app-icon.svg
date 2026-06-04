@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#2563eb"/>
+  <!-- large receipt with zig-zag bottom -->
+  <path fill="#ffffff" d="M100 84 H412 V392 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 l-13 20 -13 -20 Z"/>
+  <!-- store-name header -->
+  <rect x="166" y="130" width="180" height="26" rx="13" fill="#93c5fd"/>
+  <!-- item rows: description (left) + price (right) -->
+  <g fill="#bfdbfe">
+    <rect x="140" y="196" width="150" height="20" rx="10"/>
+    <rect x="320" y="196" width="64" height="20" rx="10"/>
+    <rect x="140" y="240" width="150" height="20" rx="10"/>
+    <rect x="320" y="240" width="64" height="20" rx="10"/>
+    <rect x="140" y="284" width="150" height="20" rx="10"/>
+    <rect x="320" y="284" width="64" height="20" rx="10"/>
+  </g>
+  <!-- total row (bold, blue) -->
+  <rect x="140" y="340" width="120" height="26" rx="13" fill="#2563eb"/>
+  <rect x="300" y="340" width="84" height="26" rx="13" fill="#2563eb"/>
+</svg>

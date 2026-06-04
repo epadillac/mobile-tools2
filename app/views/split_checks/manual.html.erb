@@ -218,6 +218,67 @@
       </div>
     </div>
 
+    <!-- Instalar en iOS -->
+    <div class="bg-white rounded-xl shadow-lg p-5">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 bg-gray-800 rounded-full flex items-center justify-center shrink-0">
+          <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 16 16">
+            <path d="M8 1.5 5.5 4l.7.7L7.5 3.4V10h1V3.4l1.3 1.3.7-.7L8 1.5Z"></path>
+            <path d="M4 6.5A1.5 1.5 0 0 0 2.5 8v4A1.5 1.5 0 0 0 4 13.5h8A1.5 1.5 0 0 0 13.5 12V8A1.5 1.5 0 0 0 12 6.5h-1.5v1H12a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V8a.5.5 0 0 1 .5-.5h1.5v-1H4Z"></path>
+          </svg>
+        </div>
+        <h2 class="text-base font-bold text-gray-800">📲 Instala la app en tu iPhone</h2>
+      </div>
+      <p class="text-gray-600 text-sm mb-3">
+        Agrega <strong>Dividir Cuenta</strong> a tu pantalla de inicio para abrirla con un toque, como cualquier otra app.
+      </p>
+      <div class="bg-gray-50 border border-gray-200 rounded-lg p-2.5 mb-3 text-center">
+        <p class="text-xs text-gray-500 mb-0.5">Dirección de la app</p>
+        <a href="https://app.bambuapps.xyz" class="text-sm font-semibold text-indigo-600 break-all">https://app.bambuapps.xyz</a>
+      </div>
+      <ol class="space-y-2 text-gray-600 text-sm mb-2">
+        <li class="flex gap-2">
+          <span class="font-bold text-indigo-600 shrink-0">1.</span>
+          <span>Abre <strong>https://app.bambuapps.xyz</strong> en <strong>Safari</strong> (el botón de Compartir solo aparece en Safari, no en Chrome).</span>
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold text-indigo-600 shrink-0">2.</span>
+          <span>Toca el botón <strong>Compartir</strong>
+            <svg class="inline w-4 h-4 -mt-0.5 text-indigo-600" fill="currentColor" viewBox="0 0 16 16">
+              <path d="M8 1.5 5.5 4l.7.7L7.5 3.4V10h1V3.4l1.3 1.3.7-.7L8 1.5Z"></path>
+              <path d="M4 6.5A1.5 1.5 0 0 0 2.5 8v4A1.5 1.5 0 0 0 4 13.5h8A1.5 1.5 0 0 0 13.5 12V8A1.5 1.5 0 0 0 12 6.5h-1.5v1H12a.5.5 0 0 1 .5.5v4a.5.5 0 0 1-.5.5H4a.5.5 0 0 1-.5-.5V8a.5.5 0 0 1 .5-.5h1.5v-1H4Z"></path>
+            </svg>
+            en la barra inferior (el cuadrado con la flecha hacia arriba).</span>
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold text-indigo-600 shrink-0">3.</span>
+          <span>Desliza hacia abajo y toca <strong>Agregar a inicio</strong> (“Añadir a pantalla de inicio”).</span>
+        </li>
+        <li class="flex gap-2">
+          <span class="font-bold text-indigo-600 shrink-0">4.</span>
+          <span>Toca <strong>Agregar</strong> en la esquina superior derecha.</span>
+        </li>
+      </ol>
+
+      <!-- Capturas de los pasos -->
+      <div class="grid grid-cols-2 gap-3 my-3">
+        <figure class="text-center">
+          <%= image_tag "manual/add-to-home.png", alt: "Menú Compartir de Safari con la opción Agregar a inicio", loading: "lazy", class: "w-full rounded-lg border border-gray-200 shadow-sm" %>
+          <figcaption class="text-[11px] text-gray-500 mt-1">Pasos 2–3: Compartir → Agregar a inicio</figcaption>
+        </figure>
+        <figure class="text-center">
+          <%= image_tag "manual/add-to-home-confirm.png", alt: "Diálogo Agregar a pantalla de inicio con el botón Agregar", loading: "lazy", class: "w-full rounded-lg border border-gray-200 shadow-sm" %>
+          <figcaption class="text-[11px] text-gray-500 mt-1">Paso 4: Toca Agregar</figcaption>
+        </figure>
+      </div>
+
+      <div class="bg-indigo-50 rounded-lg p-2.5">
+        <p class="text-xs text-indigo-700">
+          <strong>💡 Tip:</strong> El ícono aparecerá en tu pantalla de inicio y la app se abrirá en pantalla completa, sin la barra del navegador.
+        </p>
+      </div>
+    </div>
+
     <!-- CTA -->
     <div class="text-center pb-8">
       <%= link_to new_split_check_url, class: "inline-flex items-center gap-2 bg-indigo-600 text-white py-2.5 px-6 rounded-xl font-semibold text-sm hover:bg-indigo-700 transition-colors", data: { action: "click->split-check-nav#clearSplitData" } do %>
