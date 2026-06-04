@@ -619,7 +619,7 @@ export default class extends Controller {
     const count = this.getEqualSplitCount()
     const label = this.equalSplitMode
       ? `÷ Dividiendo entre ${count} ${count === 1 ? 'persona' : 'personas'} (toca para cancelar)`
-      : '÷ Dividir total entre N personas'
+      : '÷ Dividir total en partes iguales'
     equalBtn.innerHTML = `<span>${label}</span>`
     equalBtn.addEventListener('click', () => this.toggleEqualSplit())
 

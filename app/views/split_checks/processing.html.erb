@@ -4,34 +4,85 @@
   Shown while the receipt is parsed in the background (ReceiptParseJob). The
   receipt-poll controller polls #status and reloads this page into the full
   result UI once parsing finishes (or sends the user back on error).
+
+  The skeleton mirrors the real show.html.erb layout (Personas card + receipt
+  card) so the transition to the parsed result feels seamless.
 %>
 <div class="min-h-screen bg-gray-100 py-8"
      data-controller="receipt-poll"
      data-receipt-poll-url-value="<%= status_split_check_path(id: "current") %>"
      data-receipt-poll-redirect-value="<%= split_check_path(id: "current") %>"
      data-receipt-poll-interval-value="2000">
-  <div class="max-w-md mx-auto px-4">
+  <div class="max-w-4xl mx-auto px-4">
 
-    <div class="bg-white rounded-xl shadow-lg p-6 mb-4 text-center">
-      <div class="inline-flex items-center justify-center w-12 h-12 bg-indigo-100 rounded-full mb-3">
-        <svg class="w-6 h-6 text-indigo-600 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
-        </svg>
-      </div>
-      <h1 class="text-lg font-bold text-gray-800">Procesando tu ticket…</h1>
-      <p class="text-sm text-gray-500 mt-1">Esto puede tardar unos segundos.</p>
+    <!-- Processing indicator -->
+    <div class="flex items-center justify-center gap-2 mb-6 text-indigo-600">
+      <svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+      <span class="text-sm font-medium">Procesando tu ticket…</span>
     </div>
 
-    <%# Skeleton placeholders mimicking the parsed item list. %>
-    <div class="bg-white rounded-xl shadow-lg p-4 animate-pulse">
-      <div class="h-4 w-32 bg-gray-200 rounded mb-4"></div>
-      <% 5.times do %>
-        <div class="flex items-center justify-between py-3 border-b border-gray-100">
-          <div class="h-4 w-40 bg-gray-200 rounded"></div>
-          <div class="h-4 w-16 bg-gray-200 rounded"></div>
+    <!-- Personas card skeleton -->
+    <div class="bg-white rounded-xl shadow-lg p-4 mb-6 animate-pulse">
+      <div class="flex items-center justify-between mb-3">
+        <div class="space-y-2">
+          <div class="h-4 w-24 bg-gray-200 rounded"></div>
+          <div class="h-3 w-56 bg-gray-100 rounded"></div>
         </div>
-      <% end %>
+        <div class="flex gap-2 shrink-0">
+          <div class="h-7 w-20 bg-gray-200 rounded-lg"></div>
+          <div class="h-7 w-20 bg-gray-200 rounded-lg"></div>
+        </div>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <div class="h-8 w-20 bg-gray-200 rounded-full"></div>
+        <div class="h-8 w-24 bg-gray-200 rounded-full"></div>
+        <div class="h-8 w-16 bg-gray-200 rounded-full"></div>
+      </div>
+    </div>
+
+    <!-- Receipt card skeleton (matches the real receipt-style layout) -->
+    <div class="relative">
+      <div class="bg-white shadow-lg overflow-hidden border border-gray-200 animate-pulse"
+           style="font-family: 'Courier New', Courier, monospace;">
+        <!-- Header -->
+        <div class="text-center py-4 border-b border-dashed border-gray-300">
+          <div class="h-3 w-40 bg-gray-200 rounded mx-auto"></div>
+        </div>
+
+        <!-- Items -->
+        <div class="px-4 py-3 space-y-4">
+          <% [42, 56, 48, 61, 45, 53, 50].each do |w| %>
+            <div class="flex justify-between items-center">
+              <div class="h-4 bg-gray-200 rounded" style="width: <%= w %>%;"></div>
+              <div class="h-4 w-14 bg-gray-200 rounded"></div>
+            </div>
+          <% end %>
+        </div>
+
+        <!-- Separator -->
+        <div class="px-4">
+          <div class="border-t border-dashed border-gray-300"></div>
+        </div>
+
+        <!-- Total -->
+        <div class="px-4 py-4">
+          <div class="flex justify-between items-center">
+            <div class="h-5 w-24 bg-gray-300 rounded"></div>
+            <div class="h-5 w-20 bg-gray-300 rounded"></div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="text-center py-3 border-t border-dashed border-gray-300">
+          <div class="h-3 w-48 bg-gray-100 rounded mx-auto"></div>
+        </div>
+      </div>
+
+      <!-- Torn edge effect (same as the real receipt) -->
+      <div class="h-4 bg-white border-l border-r border-gray-200" style="mask-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 10%22><path d=%22M0,0 Q5,10 10,0 T20,0 T30,0 T40,0 T50,0 T60,0 T70,0 T80,0 T90,0 T100,0 V10 H0 Z%22 fill=%22white%22/></svg>'); -webkit-mask-image: url('data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 10%22><path d=%22M0,0 Q5,10 10,0 T20,0 T30,0 T40,0 T50,0 T60,0 T70,0 T80,0 T90,0 T100,0 V10 H0 Z%22 fill=%22white%22/></svg>'); mask-size: 20px 100%; -webkit-mask-size: 20px 100%;"></div>
     </div>
 
   </div>
